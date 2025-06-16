@@ -18,11 +18,9 @@ Este projeto tem como objetivo fornecer uma solução eficiente para visualizaç
 
 ## 💡 Tecnologias Utilizadas
 
-- [Insira aqui as principais tecnologias, por exemplo:]
-  - React / Vue / Angular
-  - Leaflet / Mapbox / Google Maps API
-  - Node.js / Python
-  - Outros...
+
+  - js. HTML. css.
+  
 
 ---
 
@@ -68,7 +66,7 @@ Sinta-se à vontade para abrir issues ou pull requests com sugestões, melhorias
 ## 📞 Contato
 
 - GitHub: [@Edipostore](https://github.com/Edipostore)
-- [Adicione aqui outros contatos, como e-mail, LinkedIn, etc.]
+- edipostore@gmail.com
 
 ---
 
