@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Interativo de Chamados</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <nav id="navbar">
+        <!-- Navbar content -->
+    </nav>
+
+    <header>
+        <h1>Mapa Interativo de Chamados</h1>
+    </header>
+
+    <main>
+        <div id="controls">
+            <label for="tipo-chamado">Tipo de Chamado:</label>
+            <select id="tipo-chamado">
+                <option value="urgente">Urgente</option>
+                <option value="ronda">Ronda</option>
+                <option value="preventiva">Preventiva</option>
+                <!-- Adicione mais tipos se necessário -->
+            </select>
+            <button id="btn-limpar-pontos">Limpar Todos os Pontos</button>
+        </div>
+
+        <div id="map-container">
+            <img src="assets/img/Polo.JPG" alt="Mapa do Polo Shopping" id="mapa">
+            <!-- Marcadores serão adicionados aqui pelo JavaScript -->
+        </div>
+    </main>
+
+    <footer id="footer">
+        <!-- Footer content -->
+    </footer>
+
+    <script src="assets/js/script.js" defer></script>
+</body>
+</html>
