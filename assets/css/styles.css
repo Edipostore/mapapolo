@@ -1,340 +1,243 @@
-/* assets/css/styles.css */
-
-/* Importação da fonte Montserrat e Roboto (coloque no topo) */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Roboto:wght@400;500;700&display=swap');
-
-/* Paleta de cores moderna com variáveis CSS */
-:root {
-    --primary-color: #3a86ff;    /* Azul principal */
-    --secondary-color: #8338ec; /* Roxo secundário */
-    --success-color: #06d6a0;   /* Verde para sucesso/preventiva */
-    --warning-color: #ffbe0b;   /* Amarelo para alerta/ronda */
-    --danger-color: #ff006e;    /* Vermelho para perigo/urgente */
-    --info-color: #3a86ff;      /* Azul para informação, pode ser o mesmo que o primário */
-
-    --background-main: #f8f9fa; /* Cor de fundo principal da página */
-    --surface-color: #ffffff;   /* Cor para superfícies de conteúdo (cards, modais) */
-    
-    --text-primary: #22223b;    /* Cor de texto principal (escura) */
-    --text-secondary: #4a4e69;  /* Cor de texto secundária (um pouco mais clara) */
-    --text-on-dark-bg: #ffffff; /* Cor de texto para fundos escuros */
-    --text-on-primary-bg: #ffffff; /* Cor de texto para botões com fundo primário */
-
-    --navbar-background: #22223b; /* Fundo da barra de navegação */
-    --footer-background: #22223b; /* Fundo do rodapé */
-
-    --border-light: #dee2e6;    /* Cor de borda clara */
-    --border-medium: #ced4da;   /* Cor de borda média */
-
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-sm: 0 2px 8px rgba(58, 134, 255, 0.06);
-    --shadow-md: 0 4px 16px rgba(58, 134, 255, 0.08);
-    --shadow-lg: 0 6px 24px rgba(58, 134, 255, 0.12);
-
-    --font-primary: 'Montserrat', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
-    --font-secondary: 'Roboto', 'Arial', sans-serif; /* Para texto mais utilitário se necessário */
-}
-
-/* Reset CSS Global e Configurações Base */
-html {
-    box-sizing: border-box;
-    font-size: 16px; /* Define a base para unidades REM */
-    scroll-behavior: smooth;
-}
-
-*,
-*::before,
-*::after {
-    box-sizing: inherit;
-    margin: 0;
-    padding: 0;
-}
+/* Correção das funções background para usar background-color ou background-image conforme necessário */
 
 body {
-    font-family: var(--font-primary);
-    background-color: var(--background-main);
-    color: var(--text-primary);
+    font-family: var(--font-primary, 'Montserrat', 'Segoe UI', 'Roboto', 'Arial', sans-serif);
+    background: linear-gradient(120deg, #e0e7ff 0%, #f4f6fb 100%);
+    color: var(--text-primary, #22223b);
     text-align: center;
     min-height: 100vh;
-    line-height: 1.65; /* Melhora a legibilidade */
+    line-height: 1.7;
     display: flex;
     flex-direction: column;
 }
 
-/* Utilidades */
-.sr-only { /* Para leitores de tela apenas */
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-
-/* Estilos do Header */
+/* Header */
 header {
-    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    color: var(--text-on-dark-bg);
-    padding: 2rem 1rem 1.5rem 1rem; /* Usar REM para escalabilidade */
-    box-shadow: var(--shadow-md);
-    letter-spacing: 0.5px;
-    border-bottom-left-radius: 20px;
-    border-bottom-right-radius: 20px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(90deg, var(--primary-color, #3a86ff) 0%, var(--secondary-color, #8338ec) 100%);
+    color: var(--text-on-dark-bg, #fff);
+    padding: 2.5rem 1rem 2rem 1rem;
+    box-shadow: var(--shadow-md, 0 4px 16px rgba(58,134,255,0.12));
+    border-bottom-left-radius: 32px;
+    border-bottom-right-radius: 32px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    margin-bottom: 2rem;
 }
 
 header h1 {
-    font-size: clamp(1.6rem, 4vw, 2.5rem); /* Tamanho de fonte responsivo */
-    font-weight: 700;
-    letter-spacing: 1.5px;
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    font-weight: 900;
+    letter-spacing: 2px;
     text-transform: uppercase;
-    line-height: 1.2;
+    line-height: 1.1;
+    text-align: center;
 }
 
-/* Estilos da Barra de Navegação (Nav) */
+/* Navbar */
 nav {
-    background-color: var(--navbar-background);
-    padding: 0.75rem 0;
-    box-shadow: var(--shadow-sm);
-}
-
-nav ul {
-    list-style: none;
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
+    background-color: var(--navbar-background, #22223b);
+    padding: 1rem 0;
+    box-shadow: var(--shadow-sm, 0 2px 8px rgba(58,134,255,0.08));
 }
 
 nav ul li a {
     text-decoration: none;
-    color: var(--text-on-dark-bg);
+    color: var(--text-on-dark-bg, #fff);
     font-weight: 600;
-    font-size: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, transform 0.15s ease-in-out;
+    font-size: 1.1rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    transition: background-color 0.2s, color 0.2s, transform 0.15s;
+    background-color: transparent;
 }
 
 nav ul li a:hover,
 nav ul li a:focus {
-    background-color: var(--primary-color);
-    color: var(--text-on-primary-bg);
-    transform: translateY(-2px);
+    background-color: var(--primary-color, #3a86ff);
+    color: var(--text-on-primary-bg, #fff);
+    transform: translateY(-2px) scale(1.05);
     outline: none;
 }
 
-/* Estilos do Conteúdo Principal (Main) */
+/* Main */
 main {
-    flex-grow: 1; /* Faz o main ocupar o espaço disponível */
-    padding: 1.5rem;
-    max-width: 1140px; /* Largura máxima comum */
-    margin: 1.5rem auto;
-    text-align: left;
-    width: calc(100% - 2rem); /* Garante padding lateral */
-    background-color: var(--surface-color);
-    border-radius: 12px;
-    box-shadow: var(--shadow-md);
+    flex-grow: 1;
+    padding: 2rem 1.5rem;
+    max-width: 1200px;
+    margin: 2rem auto;
+    background-color: var(--surface-glass, rgba(255,255,255,0.85));
+    border-radius: 18px;
+    box-shadow: var(--shadow-lg, 0 8px 32px rgba(58,134,255,0.18));
+    backdrop-filter: blur(2px);
 }
 
-/* Estilos dos Controles (Filtros, Botões) */
+/* Controles */
 #controls {
-    margin-bottom: 1.5rem;
-    padding: 1.25rem;
-    background: linear-gradient(135deg, #eef2f7 0%, var(--background-main) 100%);
-    border-radius: 10px;
+    margin-bottom: 2rem;
+    padding: 1.5rem 1rem;
+    background: linear-gradient(135deg, #e0e7ff 0%, #fff 100%);
+    border-radius: 14px;
     text-align: center;
-    box-shadow: var(--shadow-xs);
-    border: 1px solid var(--border-light);
-}
-
-#controls label {
-    margin-right: 0.5em;
-    font-weight: 600;
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-}
-
-#controls select,
-#controls button {
-    padding: 0.6rem 1rem;
-    margin-right: 0.75rem;
-    border: 1px solid var(--border-medium);
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-family: var(--font-secondary); /* Fonte mais utilitária */
-    outline: none;
-    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    vertical-align: middle;
-}
-
-#controls select:focus,
-#controls button:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25); /* Ajuste na cor da sombra de foco */
+    box-shadow: var(--shadow-xs, 0 1px 2px rgba(0,0,0,0.04));
+    border: 1px solid var(--border-light, #e0e6ed);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
 }
 
 #controls button {
-    background-color: var(--primary-color);
-    color: var(--text-on-primary-bg);
+    background: linear-gradient(90deg, var(--primary-color, #3a86ff) 60%, var(--secondary-color, #8338ec) 100%);
+    color: var(--text-on-primary-bg, #fff);
+    font-weight: 700;
     cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.2s ease-in-out, transform 0.15s ease-in-out;
+    border: none;
+    margin-right: 0;
+    transition: background 0.2s, transform 0.15s;
 }
 
 #controls button:hover {
-    background-color: var(--secondary-color);
-    transform: translateY(-1px) scale(1.02);
-}
-#controls button:last-child {
-    margin-right: 0;
+    background: linear-gradient(90deg, var(--secondary-color, #8338ec) 0%, var(--primary-color, #3a86ff) 100%);
+    transform: translateY(-1px) scale(1.04);
 }
 
-/* Estilos do Contêiner do Mapa e Imagem do Mapa */
+/* Mapa */
 #map-container {
     position: relative;
-    margin: 1.5rem auto; /* Centraliza e dá espaço */
-    border: 1px solid var(--border-light);
-    box-shadow: var(--shadow-sm);
-    width: 100%; /* Ocupa toda a largura do 'main' */
+    margin: 2rem auto;
+    border: 1.5px solid var(--border-light, #e0e6ed);
+    box-shadow: var(--shadow-md, 0 4px 16px rgba(58,134,255,0.12));
+    width: 100%;
     overflow: hidden;
-    background-color: var(--surface-color); /* Fundo para o contêiner, caso a imagem não carregue */
-    border-radius: 10px;
+    background-color: var(--surface-color, #fff);
+    border-radius: 16px;
+    min-height: 600px;
 }
 
 #mapa {
     width: 100%;
-    height: auto; /* Mantém a proporção da imagem */
-    display: block; /* Remove espaço extra abaixo da imagem */
-    border-radius: 10px; /* Consistente com o contêiner */
+    height: 600px;
+    display: block;
+    border-radius: 16px;
+    border: none;
+    background-color: #fff;
+    object-fit: contain;
+    box-shadow: none;
+    margin: 0 auto;
+    transition: box-shadow 0.2s;
 }
 
-/* Estilos dos Marcadores GPS (PONTOS COLORIDOS) */
+/* Marcadores GPS */
 .gps-marker {
     position: absolute;
-    width: 24px;  /* Tamanho dos pontos coloridos - ajuste conforme preferir */
-    height: 24px; /* Tamanho dos pontos coloridos */
-    border-radius: 50%; /* Para fazer um círculo */
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
     cursor: pointer;
-    z-index: 10; /* Garante que fique acima do mapa */
-    transform: translate(-50%, -50%); /* Centraliza o círculo no clique */
-    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, background-color 0.2s ease-out;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 0 0 2px var(--surface-color); /* Sombra e "borda" com cor da superfície */
-    /* Para uma borda mais explícita, use:
-    border: 2px solid var(--surface-color);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    */
+    z-index: 10;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 8px rgba(58,134,255,0.18), 0 0 0 2px var(--surface-color, #fff);
+    border: 2px solid #fff;
+    transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
 }
 
-/* Cores específicas para cada tipo de chamado usando variáveis CSS */
 .gps-marker.urgente {
-    background-color: var(--danger-color);
+    background: linear-gradient(135deg, var(--danger-color, #ff006e), #ff5eae);
 }
 .gps-marker.ronda {
-    background-color: var(--warning-color);
+    background: linear-gradient(135deg, var(--warning-color, #ffbe0b), #ffe29a);
 }
 .gps-marker.preventiva {
-    background-color: var(--success-color);
+    background: linear-gradient(135deg, var(--success-color, #06d6a0), #b2ffe7);
 }
-.gps-marker.azul, /* Para um tipo 'azul' no select */
-.gps-marker.default { /* Para um tipo 'default' ou se nenhum tipo corresponder no JS */
-    background-color: var(--info-color);
+.gps-marker.azul,
+.gps-marker.default {
+    background: linear-gradient(135deg, var(--info-color, #3a86ff), #a3c9ff);
 }
 
 .gps-marker:hover,
 .gps-marker:focus {
-    transform: translate(-50%, -50%) scale(1.25); /* Aumenta um pouco mais no hover/focus */
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 0 0 3px var(--surface-color);
-    /* Opcional: iluminar um pouco a cor no hover
-    filter: brightness(1.1);
-    */
+    transform: translate(-50%, -50%) scale(1.3);
+    box-shadow: 0 4px 16px rgba(58,134,255,0.25), 0 0 0 3px var(--surface-color, #fff);
     outline: none;
+    filter: brightness(1.1);
 }
-
-/* Estilos do Rodapé (Footer) */
+/* Footer */
 footer {
-    margin-top: auto; /* Empurra o rodapé para baixo se o conteúdo for pouco */
-    padding: 1.5rem 1rem;
-    background: linear-gradient(270deg, var(--footer-background) 0%, var(--secondary-color) 100%);
-    color: var(--text-on-dark-bg);
-    font-size: 0.9rem;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    box-shadow: var(--shadow-md);
-    letter-spacing: 0.25px;
+    margin-top: auto;
+    padding: 2rem 1rem;
+    background: linear-gradient(270deg, var(--footer-background, #22223b) 0%, var(--secondary-color, #8338ec) 100%);
+    color: var(--text-on-dark-bg, #fff);
+    font-size: 1rem;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    box-shadow: var(--shadow-md, 0 4px 16px rgba(58,134,255,0.12));
+    letter-spacing: 0.5px;
+    text-align: center;
 }
 
-/* Media Queries para Responsividade */
-@media (max-width: 768px) { /* Tablets e telas menores */
-    header {
-        padding: 1.5rem 1rem 1rem 1rem;
-        border-bottom-left-radius: 15px;
-        border-bottom-right-radius: 15px;
-    }
-    header h1 {
-        font-size: clamp(1.4rem, 5vw, 2rem);
-    }
+/* Responsividade */
+@media (max-width: 900px) {
     main {
         padding: 1rem;
         margin: 1rem auto;
-        width: calc(100% - 1.5rem);
-        border-radius: 10px;
+        border-radius: 14px;
     }
     #map-container, #mapa {
+        border-radius: 10px;
+        height: 400px;
+        min-height: 400px;
+    }
+}
+
+@media (max-width: 600px) {
+    header {
+        padding: 1.2rem 0.5rem 1rem 0.5rem;
+        border-bottom-left-radius: 14px;
+        border-bottom-right-radius: 14px;
+        margin-bottom: 1rem;
+    }
+    header h1 {
+        font-size: clamp(1.2rem, 7vw, 1.6rem);
+        letter-spacing: 1px;
+    }
+    main {
+        padding: 0.5rem;
+        margin: 0.5rem auto;
         border-radius: 8px;
     }
     #controls {
-        padding: 1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.7rem;
         border-radius: 8px;
     }
     #controls label {
-        display: block;
-        margin-bottom: 0.25rem;
-        text-align: left;
+        margin-bottom: 0.2rem;
     }
-    #controls select,
-    #controls button {
-        display: block;
-        width: 100%;
-        margin-bottom: 0.75rem;
-        margin-right: 0; /* Remove margem lateral quando empilhado */
+    #map-container, #mapa {
+        border-radius: 8px;
+        height: 220px;
+        min-height: 220px;
     }
-    #controls button:last-child {
-        margin-bottom: 0;
-    }
-
     .gps-marker {
-        width: 20px; /* Marcadores um pouco menores em telas menores */
-        height: 20px;
+        width: 11px;
+        height: 11px;
     }
     footer {
         font-size: 0.85rem;
         padding: 1rem;
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
     }
     nav ul {
         flex-direction: column;
         align-items: center;
         gap: 0.5rem;
     }
-    nav ul li a {
-        display: block; /* Links da nav ocupam largura total */
-        text-align: center;
-        padding: 0.6rem 1rem;
+        nav ul li a {
+            display: block;
+            text-align: center;
+            padding: 0.7rem 1rem;
+        }
     }
-}
-
-@media (max-width: 480px) { /* Smartphones */
-    header h1 {
-        font-size: clamp(1.2rem, 6vw, 1.8rem);
-        letter-spacing: 1px;
-    }
-    /* Ajustes finos para telas muito pequenas podem ser adicionados aqui */
-    .gps-marker {
-        width: 18px;
-        height: 18px;
-    }
-}

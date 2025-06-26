@@ -14,138 +14,84 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnLimparPontos = document.getElementById(BTN_LIMPAR_PONTOS_ID);
 
     // Verificações iniciais para garantir que os elementos essenciais existem
-    if (!mapaElement) {
-        console.error(`Erro crítico: Elemento do mapa com ID "${MAPA_ID}" não encontrado. A funcionalidade do mapa não funcionará.`);
-        return; // Impede a execução do restante do script se o mapa não for encontrado
-    }
-    if (!mapContainerElement) {
-        console.error(`Erro crítico: Elemento contêiner do mapa com ID "${MAP_CONTAINER_ID}" não encontrado. Os marcadores não podem ser posicionados.`);
-        return; // Impede a execução se o contêiner do mapa não for encontrado
-    }
-    if (!tipoChamadoSelect) {
-        console.error(`Erro: Elemento select com ID "${TIPO_CHAMADO_SELECT_ID}" não encontrado. A seleção de tipo de chamado não funcionará.`);
-        // Pode-se optar por continuar com um tipo padrão ou desabilitar a adição de pontos
-    }
-    if (!btnLimparPontos) { // Se o botão for opcional, usar console.warn
-        console.warn(`Aviso: Botão com ID "${BTN_LIMPAR_PONTOS_ID}" não encontrado. A funcionalidade de limpar pontos não estará disponível.`);
+    if (!mapaElement || !mapContainerElement) {
+        console.error("Elemento do mapa ou contêiner não encontrado.");
+        return;
     }
 
     // Array para armazenar referências aos elementos DOM dos marcadores
     let marcadoresNoMapa = [];
     let markerIdCounter = 0; // Contador para IDs únicos dos marcadores
 
-    /**
-     * Cria e adiciona um novo marcador visual ao mapa.
-     * @param {number} xPercent - Coordenada X do marcador em porcentagem.
-     * @param {number} yPercent - Coordenada Y do marcador em porcentagem.
-     * @param {string} tipo - O tipo de chamado (ex: "urgente", "ronda"), usado para aplicar a classe CSS correta.
-     */
     function adicionarMarcador(xPercent, yPercent, tipo) {
         const gpsMarker = document.createElement("div");
         markerIdCounter++;
         gpsMarker.id = `marker-${markerIdCounter}`;
-
-        // Aplica as classes CSS:
-        // - 'gps-marker': para estilos base (tamanho, forma, posicionamento base, transições)
-        // - 'tipo': (ex: 'urgente') para a cor específica do ponto (definida no CSS)
         gpsMarker.className = `gps-marker ${tipo}`;
-
-        // Define a posição do marcador dinamicamente via JavaScript
-        gpsMarker.style.left = `${xPercent.toFixed(2)}%`; // Usar toFixed para evitar números muito longos
+        gpsMarker.style.left = `${xPercent.toFixed(2)}%`;
         gpsMarker.style.top = `${yPercent.toFixed(2)}%`;
-
-        // Armazena dados úteis no próprio elemento para fácil acesso
-        gpsMarker.dataset.tipo = tipo;
-        gpsMarker.dataset.x = xPercent.toFixed(2);
-        gpsMarker.dataset.y = yPercent.toFixed(2);
-        gpsMarker.setAttribute('role', 'button'); // Para acessibilidade, já que é clicável
-        gpsMarker.setAttribute('tabindex', '0');  // Permite foco via teclado
+        gpsMarker.style.position = "absolute";
+        gpsMarker.style.pointerEvents = "auto";
+        gpsMarker.setAttribute('role', 'button');
+        gpsMarker.setAttribute('tabindex', '0');
         gpsMarker.setAttribute('aria-label', `Marcador tipo ${tipo} na posição ${xPercent.toFixed(0)}%, ${yPercent.toFixed(0)}%`);
 
-
-        // Evento de clique no marcador para exibir informações
-        const exibirDetalhesMarcador = () => {
+        gpsMarker.addEventListener('click', (event) => {
+            event.stopPropagation();
             alert(
                 `Detalhes do Ponto:\n` +
                 `ID: ${gpsMarker.id}\n` +
-                `Tipo: ${gpsMarker.dataset.tipo}\n` +
-                `Localização (aprox.): ${gpsMarker.dataset.x}% Leste, ${gpsMarker.dataset.y}% Topo`
+                `Tipo: ${tipo}\n` +
+                `Localização (aprox.): ${xPercent.toFixed(2)}% Leste, ${yPercent.toFixed(2)}% Topo`
             );
-        };
-        
-        gpsMarker.addEventListener('click', (event) => {
-            event.stopPropagation(); // Impede que o clique no marcador crie outro ponto no mapa
-            exibirDetalhesMarcador();
         });
 
-        // Permite "clicar" com a tecla Enter ou Espaço quando focado (acessibilidade)
         gpsMarker.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault(); // Impede comportamento padrão (ex: rolar a página com Espaço)
+                event.preventDefault();
                 event.stopPropagation();
-                exibirDetalhesMarcador();
+                gpsMarker.click();
             }
         });
-
 
         mapContainerElement.appendChild(gpsMarker);
-        marcadoresNoMapa.push(gpsMarker); // Adiciona à lista para gerenciamento (ex: limpar)
-
-        console.log(`Marcador '${tipo}' (ID: ${gpsMarker.id}) adicionado em: (${xPercent.toFixed(2)}%, ${yPercent.toFixed(2)}%)`);
+        marcadoresNoMapa.push(gpsMarker);
     }
 
-    // Evento de clique no elemento do mapa para adicionar um novo ponto
-    if (mapaElement) {
-        mapaElement.addEventListener("click", (event) => {
-            if (!tipoChamadoSelect) { // Se o select não existe, não permite adicionar
-                console.warn("Não é possível adicionar marcador: seletor de tipo de chamado não encontrado.");
-                return;
-            }
+    // Evento de clique no mapa (imagem)
+  if (mapaElement) {
+    mapContainerElement.style.position = "relative";
+    mapaElement.style.display = "block";
 
-            const rect = mapaElement.getBoundingClientRect();
-            // Calcula as coordenadas do clique relativas ao elemento 'mapa'
-            const clickX = event.clientX - rect.left;
-            const clickY = event.clientY - rect.top;
-
-            // Converte as coordenadas para porcentagem em relação às dimensões do 'mapa'
-            const xPercent = (clickX / rect.width) * 100;
-            const yPercent = (clickY / rect.height) * 100;
-
-            const tipoSelecionado = tipoChamadoSelect.value;
-
-            // Validação simples para garantir que as porcentagens estão dentro dos limites (0-100)
-            // Embora o cálculo deva sempre resultar nisso, é uma boa prática defensiva.
-            if (xPercent >= 0 && xPercent <= 100 && yPercent >= 0 && yPercent <= 100) {
-                adicionarMarcador(xPercent, yPercent, tipoSelecionado);
-            } else {
-                console.warn("Coordenadas de clique fora dos limites esperados do mapa.", { xPercent, yPercent });
-            }
-        });
+    // Só adiciona o evento após a imagem carregar
+    if (mapaElement.complete) {
+        ativarClick();
+    } else {
+        mapaElement.addEventListener('load', ativarClick);
     }
+}
 
+function ativarClick() {
+    mapaElement.addEventListener("click", (event) => {
+        if (!tipoChamadoSelect) return;
+        const rect = mapaElement.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const clickY = event.clientY - rect.top;
+        const xPercent = (clickX / rect.width) * 100;
+        const yPercent = (clickY / rect.height) * 100;
+        const tipoSelecionado = tipoChamadoSelect.value;
+        if (xPercent >= 0 && xPercent <= 100 && yPercent >= 0 && yPercent <= 100) {
+            adicionarMarcador(xPercent, yPercent, tipoSelecionado);
+        }
+    });
+}
 
-    // Evento para o botão de limpar todos os pontos do mapa
+    // Limpar todos os pontos
     if (btnLimparPontos) {
         btnLimparPontos.addEventListener("click", () => {
-            if (marcadoresNoMapa.length === 0) {
-                console.log("Nenhum marcador para remover.");
-                // Poderia exibir uma mensagem para o usuário também
-                // alert("Não há marcadores no mapa para limpar.");
-                return;
-            }
-
-            // Confirmação opcional antes de limpar
-            // if (!confirm("Tem certeza que deseja remover todos os marcadores do mapa?")) {
-            //     return;
-            // }
-
-            marcadoresNoMapa.forEach(marker => marker.remove()); // Remove cada marcador do DOM
-            marcadoresNoMapa = []; // Limpa o array de referências
-            markerIdCounter = 0;   // Opcional: resetar o contador de ID
-            console.log("Todos os marcadores foram removidos do mapa.");
+            marcadoresNoMapa.forEach(marker => marker.remove());
+            marcadoresNoMapa = [];
+            markerIdCounter = 0;
         });
     }
-
-    console.log("Sistema de mapa interativo inicializado com sucesso.");
-    // Aqui você poderia adicionar funcionalidades futuras, como carregar marcadores salvos.
 });
