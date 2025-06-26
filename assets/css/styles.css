@@ -241,3 +241,10 @@ footer {
             padding: 0.7rem 1rem;
         }
     }
+    /* Responsividade para imagens */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
