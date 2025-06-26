@@ -69,21 +69,21 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
         mapaElement.addEventListener('load', ativarClick);
     }
-}
 
-function ativarClick() {
-    mapaElement.addEventListener("click", (event) => {
-        if (!tipoChamadoSelect) return;
-        const rect = mapaElement.getBoundingClientRect();
-        const clickX = event.clientX - rect.left;
-        const clickY = event.clientY - rect.top;
-        const xPercent = (clickX / rect.width) * 100;
-        const yPercent = (clickY / rect.height) * 100;
-        const tipoSelecionado = tipoChamadoSelect.value;
-        if (xPercent >= 0 && xPercent <= 100 && yPercent >= 0 && yPercent <= 100) {
-            adicionarMarcador(xPercent, yPercent, tipoSelecionado);
-        }
-    });
+    function ativarClick() {
+        mapaElement.addEventListener("click", (event) => {
+            if (!tipoChamadoSelect) return;
+            const rect = mapaElement.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+            const xPercent = (clickX / rect.width) * 100;
+            const yPercent = (clickY / rect.height) * 100;
+            const tipoSelecionado = tipoChamadoSelect.value;
+            if (xPercent >= 0 && xPercent <= 100 && yPercent >= 0 && yPercent <= 100) {
+                adicionarMarcador(xPercent, yPercent, tipoSelecionado);
+            }
+        });
+    }
 }
 
     // Limpar todos os pontos
