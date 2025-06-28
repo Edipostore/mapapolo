@@ -1,151 +1,328 @@
-// assets/js/script.js
-
 document.addEventListener("DOMContentLoaded", () => {
-    // IDs dos elementos do DOM
-    const MAPA_ID = "mapa";
-    const MAP_CONTAINER_ID = "map-container";
-    const TIPO_CHAMADO_SELECT_ID = "tipo-chamado";
-    const BTN_LIMPAR_PONTOS_ID = "btn-limpar-pontos";
+    // Elementos principais
+    const mapaElement = document.getElementById("mapa");
+    const marcadoresContainer = document.getElementById("marcadores");
+    const btnLimparPontos = document.getElementById("btn-limpar-pontos");
+    const btnExportar = document.getElementById("btn-exportar");
+    const tipoChamadoSelect = document.getElementById("tipo-chamado");
+    const listaChamados = document.getElementById("lista-chamados");
+    const filtros = document.querySelectorAll("#filtros input[type=checkbox]");
+    const modal = document.getElementById("modal-edicao");
+    const selectModal = document.getElementById("modal-tipo");
+    const btnSalvarModal = document.getElementById("modal-salvar");
+    const btnCancelarModal = document.getElementById("modal-cancelar");
+    const mapWrapper = document.getElementById("map-wrapper");
 
-    // Seleção dos elementos do DOM
-    const mapaElement = document.getElementById(MAPA_ID);
-    const mapContainerElement = document.getElementById(MAP_CONTAINER_ID);
-    const tipoChamadoSelect = document.getElementById(TIPO_CHAMADO_SELECT_ID);
-    const btnLimparPontos = document.getElementById(BTN_LIMPAR_PONTOS_ID);
-
-    // Verificações iniciais para garantir que os elementos essenciais existem
-    if (!mapaElement) {
-        console.error(`Erro crítico: Elemento do mapa com ID "${MAPA_ID}" não encontrado. A funcionalidade do mapa não funcionará.`);
-        return; // Impede a execução do restante do script se o mapa não for encontrado
-    }
-    if (!mapContainerElement) {
-        console.error(`Erro crítico: Elemento contêiner do mapa com ID "${MAP_CONTAINER_ID}" não encontrado. Os marcadores não podem ser posicionados.`);
-        return; // Impede a execução se o contêiner do mapa não for encontrado
-    }
-    if (!tipoChamadoSelect) {
-        console.error(`Erro: Elemento select com ID "${TIPO_CHAMADO_SELECT_ID}" não encontrado. A seleção de tipo de chamado não funcionará.`);
-        // Pode-se optar por continuar com um tipo padrão ou desabilitar a adição de pontos
-    }
-    if (!btnLimparPontos) { // Se o botão for opcional, usar console.warn
-        console.warn(`Aviso: Botão com ID "${BTN_LIMPAR_PONTOS_ID}" não encontrado. A funcionalidade de limpar pontos não estará disponível.`);
-    }
-
-    // Array para armazenar referências aos elementos DOM dos marcadores
+    let chamados = JSON.parse(localStorage.getItem("chamados") || "[]");
     let marcadoresNoMapa = [];
-    let markerIdCounter = 0; // Contador para IDs únicos dos marcadores
+    let markerIdCounter = chamados.length ? Math.max(...chamados.map(c => c.id)) + 1 : 1;
+    let ultimoPonto = null; // Para centralizar no último ponto ao dar zoom
 
-    /**
-     * Cria e adiciona um novo marcador visual ao mapa.
-     * @param {number} xPercent - Coordenada X do marcador em porcentagem.
-     * @param {number} yPercent - Coordenada Y do marcador em porcentagem.
-     * @param {string} tipo - O tipo de chamado (ex: "urgente", "ronda"), usado para aplicar a classe CSS correta.
-     */
+    // Função para salvar chamados no localStorage
+    function salvarChamados() {
+        localStorage.setItem("chamados", JSON.stringify(chamados));
+    }
+
+    // Função para atualizar a lista lateral
+    function atualizarLista() {
+        listaChamados.innerHTML = "";
+        chamados.forEach(chamado => {
+            if (!filtroAtivo(chamado.tipo)) return;
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <strong>${iconeTipo(chamado.tipo)} ${chamado.tipo.toUpperCase()}</strong>
+                <br>
+                <small>${chamado.dataHora}</small>
+                <br>
+                <button class="editar-chamado" data-id="${chamado.id}"><i class="fa fa-edit"></i> Editar</button>
+                <button class="remover-chamado" data-id="${chamado.id}"><i class="fa fa-trash"></i> Remover</button>
+            `;
+            listaChamados.appendChild(li);
+        });
+
+        // Eventos dos botões de editar/remover
+        document.querySelectorAll(".editar-chamado").forEach(btn => {
+            btn.addEventListener("click", e => {
+                const id = Number(btn.getAttribute("data-id"));
+                editarChamado(id);
+            });
+        });
+        document.querySelectorAll(".remover-chamado").forEach(btn => {
+            btn.addEventListener("click", e => {
+                const id = Number(btn.getAttribute("data-id"));
+                removerChamado(id);
+            });
+        });
+    }
+
+    // Função para verificar filtro ativo
+    function filtroAtivo(tipo) {
+        const filtro = Array.from(filtros).find(f => f.value === tipo);
+        return filtro && filtro.checked;
+    }
+
+    // Função para retornar ícone do tipo
+    function iconeTipo(tipo) {
+        switch (tipo) {
+            case "urgente": return "🚨";
+            case "ronda": return "👮";
+            case "preventiva": return "🛠️";
+            default: return "";
+        }
+    }
+
+    // Função para adicionar marcador
     function adicionarMarcador(xPercent, yPercent, tipo) {
+        const id = markerIdCounter++;
+        const dataHora = new Date().toLocaleString();
         const gpsMarker = document.createElement("div");
-        markerIdCounter++;
-        gpsMarker.id = `marker-${markerIdCounter}`;
-
-        // Aplica as classes CSS:
-        // - 'gps-marker': para estilos base (tamanho, forma, posicionamento base, transições)
-        // - 'tipo': (ex: 'urgente') para a cor específica do ponto (definida no CSS)
         gpsMarker.className = `gps-marker ${tipo}`;
+        gpsMarker.style.left = `${xPercent}%`;
+        gpsMarker.style.top = `${yPercent}%`;
+        gpsMarker.setAttribute("data-tooltip", `${tipo.toUpperCase()} - ${dataHora}`);
+        gpsMarker.setAttribute("data-id", id);
 
-        // Define a posição do marcador dinamicamente via JavaScript
-        gpsMarker.style.left = `${xPercent.toFixed(2)}%`; // Usar toFixed para evitar números muito longos
-        gpsMarker.style.top = `${yPercent.toFixed(2)}%`;
-
-        // Armazena dados úteis no próprio elemento para fácil acesso
-        gpsMarker.dataset.tipo = tipo;
-        gpsMarker.dataset.x = xPercent.toFixed(2);
-        gpsMarker.dataset.y = yPercent.toFixed(2);
-        gpsMarker.setAttribute('role', 'button'); // Para acessibilidade, já que é clicável
-        gpsMarker.setAttribute('tabindex', '0');  // Permite foco via teclado
-        gpsMarker.setAttribute('aria-label', `Marcador tipo ${tipo} na posição ${xPercent.toFixed(0)}%, ${yPercent.toFixed(0)}%`);
-
-
-        // Evento de clique no marcador para exibir informações
-        const exibirDetalhesMarcador = () => {
-            alert(
-                `Detalhes do Ponto:\n` +
-                `ID: ${gpsMarker.id}\n` +
-                `Tipo: ${gpsMarker.dataset.tipo}\n` +
-                `Localização (aprox.): ${gpsMarker.dataset.x}% Leste, ${gpsMarker.dataset.y}% Topo`
-            );
-        };
-        
-        gpsMarker.addEventListener('click', (event) => {
-            event.stopPropagation(); // Impede que o clique no marcador crie outro ponto no mapa
-            exibirDetalhesMarcador();
+        gpsMarker.addEventListener("click", (e) => {
+            e.stopPropagation();
+            editarChamado(id);
         });
 
-        // Permite "clicar" com a tecla Enter ou Espaço quando focado (acessibilidade)
-        gpsMarker.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault(); // Impede comportamento padrão (ex: rolar a página com Espaço)
-                event.stopPropagation();
-                exibirDetalhesMarcador();
-            }
-        });
+        marcadoresContainer.appendChild(gpsMarker);
+        marcadoresNoMapa.push(gpsMarker);
 
-
-        mapContainerElement.appendChild(gpsMarker);
-        marcadoresNoMapa.push(gpsMarker); // Adiciona à lista para gerenciamento (ex: limpar)
-
-        console.log(`Marcador '${tipo}' (ID: ${gpsMarker.id}) adicionado em: (${xPercent.toFixed(2)}%, ${yPercent.toFixed(2)}%)`);
+        chamados.push({ id, tipo, dataHora, xPercent, yPercent });
+        ultimoPonto = { xPercent, yPercent }; // Salva o último ponto
+        salvarChamados();
+        atualizarLista();
     }
 
-    // Evento de clique no elemento do mapa para adicionar um novo ponto
-    if (mapaElement) {
+    // Função para remover chamado
+    function removerChamado(id) {
+        chamados = chamados.filter(c => c.id !== id);
+        salvarChamados();
+        atualizarLista();
+        // Remove marcador do mapa
+        const marker = document.querySelector(`.gps-marker[data-id="${id}"]`);
+        if (marker) marker.remove();
+    }
+
+    // Função para redesenhar marcadores
+    function desenharMarcadores() {
+        marcadoresContainer.innerHTML = "";
+        marcadoresNoMapa = [];
+        chamados.forEach(chamado => {
+            if (!filtroAtivo(chamado.tipo)) return;
+            const gpsMarker = document.createElement("div");
+            gpsMarker.className = `gps-marker ${chamado.tipo}`;
+            gpsMarker.style.left = `${chamado.xPercent}%`;
+            gpsMarker.style.top = `${chamado.yPercent}%`;
+            gpsMarker.setAttribute("data-tooltip", `${chamado.tipo.toUpperCase()} - ${chamado.dataHora}`);
+            gpsMarker.setAttribute("data-id", chamado.id);
+
+            gpsMarker.addEventListener("click", (e) => {
+                e.stopPropagation();
+                editarChamado(chamado.id);
+            });
+
+            marcadoresContainer.appendChild(gpsMarker);
+            marcadoresNoMapa.push(gpsMarker);
+        });
+    }
+
+    // Evento de clique no mapa para adicionar marcador
+    function ativarClick() {
         mapaElement.addEventListener("click", (event) => {
-            if (!tipoChamadoSelect) { // Se o select não existe, não permite adicionar
-                console.warn("Não é possível adicionar marcador: seletor de tipo de chamado não encontrado.");
-                return;
-            }
-
             const rect = mapaElement.getBoundingClientRect();
-            // Calcula as coordenadas do clique relativas ao elemento 'mapa'
-            const clickX = event.clientX - rect.left;
-            const clickY = event.clientY - rect.top;
-
-            // Converte as coordenadas para porcentagem em relação às dimensões do 'mapa'
-            const xPercent = (clickX / rect.width) * 100;
-            const yPercent = (clickY / rect.height) * 100;
-
-            const tipoSelecionado = tipoChamadoSelect.value;
-
-            // Validação simples para garantir que as porcentagens estão dentro dos limites (0-100)
-            // Embora o cálculo deva sempre resultar nisso, é uma boa prática defensiva.
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const xPercent = (x / rect.width) * 100;
+            const yPercent = (y / rect.height) * 100;
+            const tipo = tipoChamadoSelect.value;
             if (xPercent >= 0 && xPercent <= 100 && yPercent >= 0 && yPercent <= 100) {
-                adicionarMarcador(xPercent, yPercent, tipoSelecionado);
-            } else {
-                console.warn("Coordenadas de clique fora dos limites esperados do mapa.", { xPercent, yPercent });
+                adicionarMarcador(xPercent, yPercent, tipo);
+                desenharMarcadores();
             }
         });
     }
 
+    if (mapaElement.complete) {
+        ativarClick();
+    } else {
+        mapaElement.addEventListener("load", ativarClick);
+    }
 
-    // Evento para o botão de limpar todos os pontos do mapa
+    // Limpar pontos
     if (btnLimparPontos) {
         btnLimparPontos.addEventListener("click", () => {
-            if (marcadoresNoMapa.length === 0) {
-                console.log("Nenhum marcador para remover.");
-                // Poderia exibir uma mensagem para o usuário também
-                // alert("Não há marcadores no mapa para limpar.");
-                return;
-            }
-
-            // Confirmação opcional antes de limpar
-            // if (!confirm("Tem certeza que deseja remover todos os marcadores do mapa?")) {
-            //     return;
-            // }
-
-            marcadoresNoMapa.forEach(marker => marker.remove()); // Remove cada marcador do DOM
-            marcadoresNoMapa = []; // Limpa o array de referências
-            markerIdCounter = 0;   // Opcional: resetar o contador de ID
-            console.log("Todos os marcadores foram removidos do mapa.");
+            marcadoresNoMapa.forEach(marker => marker.remove());
+            marcadoresNoMapa = [];
+            chamados = [];
+            markerIdCounter = 1;
+            ultimoPonto = null;
+            salvarChamados();
+            atualizarLista();
         });
     }
 
-    console.log("Sistema de mapa interativo inicializado com sucesso.");
-    // Aqui você poderia adicionar funcionalidades futuras, como carregar marcadores salvos.
+    // Exportar chamados
+    if (btnExportar) {
+        btnExportar.addEventListener("click", () => {
+            const data = JSON.stringify(chamados, null, 2);
+            const blob = new Blob([data], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "chamados.json";
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    }
+
+    // Filtros
+    filtros.forEach(filtro => {
+        filtro.addEventListener("change", () => {
+            desenharMarcadores();
+            atualizarLista();
+        });
+    });
+
+    // Função para editar chamado
+    function editarChamado(id) {
+        if (!modal || !selectModal || !btnSalvarModal || !btnCancelarModal) return;
+
+        const chamado = chamados.find(c => c.id === id);
+        if (!chamado) return;
+
+        selectModal.value = chamado.tipo;
+        modal.classList.add("show");
+
+        function fecharModal() {
+            modal.classList.remove("show");
+            document.removeEventListener("keydown", escHandler);
+            modal.removeEventListener("click", outsideClick);
+            btnSalvarModal.removeEventListener("click", salvar);
+            btnCancelarModal.removeEventListener("click", fecharModal);
+        }
+
+        function salvar() {
+            chamado.tipo = selectModal.value;
+            salvarChamados();
+
+            const marker = document.querySelector(`.gps-marker[data-id="${id}"]`);
+            if (marker) {
+                marker.className = `gps-marker ${chamado.tipo}`;
+                marker.setAttribute("data-tooltip", `${chamado.tipo.toUpperCase()} - ${chamado.dataHora}`);
+            }
+
+            atualizarLista();
+            desenharMarcadores();
+            fecharModal();
+        }
+
+        function escHandler(e) {
+            if (e.key === "Escape") fecharModal();
+        }
+
+        function outsideClick(e) {
+            if (e.target === modal) fecharModal();
+        }
+
+        btnSalvarModal.addEventListener("click", salvar);
+        btnCancelarModal.addEventListener("click", fecharModal);
+        document.addEventListener("keydown", escHandler);
+        modal.addEventListener("click", outsideClick);
+    }
+
+    // Inicialização
+    desenharMarcadores();
+    atualizarLista();
+
+    // --- ZOOM DO MAPA ---
+    const btnZoomIn = document.getElementById("zoom-in");
+    const btnZoomOut = document.getElementById("zoom-out");
+    const btnZoomReset = document.getElementById("zoom-reset");
+    let zoomLevel = 1;
+    const ZOOM_STEP = 0.2;
+    const ZOOM_MIN = 0.5;
+    const ZOOM_MAX = 5;
+
+    // Variáveis para arrastar o mapa
+    let isDragging = false;
+    let startX, startY, lastX = 0, lastY = 0;
+
+    function aplicarZoom() {
+        if (mapWrapper) {
+            if (zoomLevel === 1) {
+                lastX = 0;
+                lastY = 0;
+                mapWrapper.style.transform = `scale(1)`;
+                mapWrapper.classList.remove("grab", "grabbing");
+            } else {
+                // Centraliza no último ponto adicionado
+                if (ultimoPonto) {
+                    const rect = mapWrapper.getBoundingClientRect();
+                    const pontoX = rect.width * (ultimoPonto.xPercent / 100);
+                    const pontoY = rect.height * (ultimoPonto.yPercent / 100);
+                    lastX = (rect.width / 2 - pontoX) * zoomLevel;
+                    lastY = (rect.height / 2 - pontoY) * zoomLevel;
+                }
+                mapWrapper.style.transform = `scale(${zoomLevel}) translate(${lastX / zoomLevel}px, ${lastY / zoomLevel}px)`;
+                mapWrapper.classList.add("grab");
+            }
+            mapWrapper.style.transformOrigin = "top left";
+        }
+    }
+
+    if (btnZoomIn && btnZoomOut && btnZoomReset) {
+        btnZoomIn.addEventListener("click", () => {
+            zoomLevel = Math.min(zoomLevel + ZOOM_STEP, ZOOM_MAX);
+            aplicarZoom();
+        });
+
+        btnZoomOut.addEventListener("click", () => {
+            zoomLevel = Math.max(zoomLevel - ZOOM_STEP, ZOOM_MIN);
+            aplicarZoom();
+        });
+
+        btnZoomReset.addEventListener("click", () => {
+            zoomLevel = 1;
+            aplicarZoom();
+        });
+    }
+
+    // Arrastar o mapa com o mouse quando estiver com zoom
+    if (mapWrapper) {
+        mapWrapper.addEventListener("mousedown", (e) => {
+            if (zoomLevel === 1) return;
+            isDragging = true;
+            startX = e.clientX - lastX;
+            startY = e.clientY - lastY;
+            mapWrapper.classList.add("grabbing");
+            mapWrapper.classList.remove("grab");
+        });
+
+        mapWrapper.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+            lastX = e.clientX - startX;
+            lastY = e.clientY - startY;
+            mapWrapper.style.transform = `scale(${zoomLevel}) translate(${lastX / zoomLevel}px, ${lastY / zoomLevel}px)`;
+        });
+
+        document.addEventListener("mouseup", () => {
+            if (isDragging) {
+                isDragging = false;
+                mapWrapper.classList.remove("grabbing");
+                mapWrapper.classList.add("grab");
+            }
+        });
+
+        mapWrapper.addEventListener("mouseenter", () => {
+            if (zoomLevel > 1) mapWrapper.classList.add("grab");
+        });
+        mapWrapper.addEventListener("mouseleave", () => {
+            mapWrapper.classList.remove("grab");
+        });
+
+        // Não há pan com scroll (wheel)
+    }
 });
