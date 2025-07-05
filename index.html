@@ -23,16 +23,19 @@
         <option value="urgente">🚨 Urgente</option>
         <option value="ronda">👮 Ronda</option>
         <option value="preventiva">🛠️ Preventiva</option>
+        <option value="item">📦 Item</option>
+        <option value="escada">🪜 Escada</option>
       </select>
 
       <button id="btn-limpar-pontos">🧹 Limpar Pontos</button>
-      <button id="btn-exportar">📤 Exportar</button>
 
       <fieldset id="filtros">
         <legend>Filtrar por Tipo:</legend>
         <label><input type="checkbox" value="urgente" checked /> Urgente</label>
         <label><input type="checkbox" value="ronda" checked /> Ronda</label>
         <label><input type="checkbox" value="preventiva" checked /> Preventiva</label>
+        <label><input type="checkbox" value="item" checked /> Item</label>
+        <label><input type="checkbox" value="escada" checked /> Escada</label>
       </fieldset>
     </section>
 
@@ -53,7 +56,15 @@
       <aside id="painel-chamados">
         <h2>📋 Lista de Chamados</h2>
         <ul id="lista-chamados">
-          <!-- Chamados adicionados aparecerão aqui -->
+          <li>
+            Chamado Urgente - Loja 10
+            <a href="pdfs/chamado1.pdf" target="_blank" class="btn-pdf">PDF</a>
+          </li>
+          <li>
+            Chamado Escada - Corredor 2
+            <a href="pdfs/chamado2.pdf" target="_blank" class="btn-pdf">PDF</a>
+          </li>
+          <!-- Adicione mais chamados conforme necessário -->
         </ul>
       </aside>
     </section>
@@ -70,6 +81,8 @@
         <option value="urgente">🚨 Urgente</option>
         <option value="ronda">👮 Ronda</option>
         <option value="preventiva">🛠️ Preventiva</option>
+        <option value="item">📦 Item</option>
+        <option value="escada">🪜 Escada</option>
       </select>
       <div class="modal-actions">
         <button id="modal-salvar">Salvar</button>
@@ -80,4 +93,3 @@
 
   <script src="assets/js/script.js" defer></script>
 </body>
-</html>

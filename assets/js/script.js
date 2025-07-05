@@ -3,7 +3,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const mapaElement = document.getElementById("mapa");
     const marcadoresContainer = document.getElementById("marcadores");
     const btnLimparPontos = document.getElementById("btn-limpar-pontos");
-    const btnExportar = document.getElementById("btn-exportar");
     const tipoChamadoSelect = document.getElementById("tipo-chamado");
     const listaChamados = document.getElementById("lista-chamados");
     const filtros = document.querySelectorAll("#filtros input[type=checkbox]");
@@ -36,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <br>
                 <button class="editar-chamado" data-id="${chamado.id}"><i class="fa fa-edit"></i> Editar</button>
                 <button class="remover-chamado" data-id="${chamado.id}"><i class="fa fa-trash"></i> Remover</button>
+                <a href="pdfs/chamado${chamado.id}.pdf" target="_blank" class="btn-pdf">PDF</a>
             `;
             listaChamados.appendChild(li);
         });
@@ -67,6 +67,8 @@ document.addEventListener("DOMContentLoaded", () => {
             case "urgente": return "🚨";
             case "ronda": return "👮";
             case "preventiva": return "🛠️";
+            case "item": return "📦";
+            case "escada": return "🪜";
             default: return "";
         }
     }
@@ -161,20 +163,6 @@ document.addEventListener("DOMContentLoaded", () => {
             ultimoPonto = null;
             salvarChamados();
             atualizarLista();
-        });
-    }
-
-    // Exportar chamados
-    if (btnExportar) {
-        btnExportar.addEventListener("click", () => {
-            const data = JSON.stringify(chamados, null, 2);
-            const blob = new Blob([data], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "chamados.json";
-            a.click();
-            URL.revokeObjectURL(url);
         });
     }
 
@@ -318,11 +306,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         mapWrapper.addEventListener("mouseenter", () => {
             if (zoomLevel > 1) mapWrapper.classList.add("grab");
-        });
+         });
         mapWrapper.addEventListener("mouseleave", () => {
             mapWrapper.classList.remove("grab");
         });
-
-        // Não há pan com scroll (wheel)
     }
 });
