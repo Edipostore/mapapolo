@@ -131,21 +131,22 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Evento de clique no mapa para adicionar marcador
-    function ativarClick() {
-        mapaElement.addEventListener("click", (event) => {
-            const rect = mapaElement.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-            const xPercent = (x / rect.width) * 100;
-            const yPercent = (y / rect.height) * 100;
-            const tipo = tipoChamadoSelect.value;
-            if (xPercent >= 0 && xPercent <= 100 && yPercent >= 0 && yPercent <= 100) {
-                adicionarMarcador(xPercent, yPercent, tipo);
-                desenharMarcadores();
-            }
-        });
-    }
+    // Evento de clique no mapa para adicionar marcador (calibrado)
+function ativarClick() {
+    mapaElement.addEventListener("click", (event) => {
+        // Pega a posição do clique relativa à imagem do mapa
+        const rect = mapaElement.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const xPercent = (x / rect.width) * 100;
+        const yPercent = (y / rect.height) * 100;
+        const tipo = tipoChamadoSelect.value;
+        if (xPercent >= 0 && xPercent <= 100 && yPercent >= 0 && yPercent <= 100) {
+            adicionarMarcador(xPercent, yPercent, tipo);
+            desenharMarcadores();
+        }
+    });
+}
 
     if (mapaElement.complete) {
         ativarClick();
@@ -306,7 +307,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         mapWrapper.addEventListener("mouseenter", () => {
             if (zoomLevel > 1) mapWrapper.classList.add("grab");
-         });
+          });
         mapWrapper.addEventListener("mouseleave", () => {
             mapWrapper.classList.remove("grab");
         });

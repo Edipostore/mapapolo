@@ -49,12 +49,15 @@ header h1 {
 main {
   flex-grow: 1;
   padding: 2rem 1.5rem;
-  max-width: 1200px;
+  width: auto;
   margin: 0 auto;
   background-color: var(--surface-glass);
   border-radius: 18px;
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Controles */
@@ -106,40 +109,49 @@ main {
 /* Mapa e Painel */
 #mapa-e-lista {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: flex-start;
   gap: 2rem;
   justify-content: center;
-  align-items: flex-start;
+  width: auto;
+  min-width: calc(1200px + 420px);
+  max-width: calc(1200px + 420px);
 }
 
 #map-container {
   position: relative;
-  flex: 3 1 800px; /* maior painel do mapa */
+  width: 1200px;
+  height: 900px;
+  min-width: 1200px;
+  min-height: 900px;
+  max-width: 1200px;
+  max-height: 900px;
   border: 1.5px solid var(--border-light);
   box-shadow: var(--shadow-md);
   border-radius: 16px;
-  min-height: 700px;
   background-color: var(--surface-color);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 #map-wrapper {
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: auto; /* barras de rolagem horizontal e vertical */
-  touch-action: pinch-zoom; /* suporte a gesto de pinça em smartphones */
+  overflow: auto;
+  touch-action: pinch-zoom;
   cursor: default;
 }
 
 #mapa {
-  width: 1200px;  /* largura fixa para permitir scroll */
-  height: 900px;  /* altura fixa para permitir scroll */
   display: block;
+  width: 100%;
+  height: 100%;
   border-radius: 16px;
-  object-fit: contain;
-  transition: transform 0.3s ease;
-  transform-origin: top left;
+  object-fit: fill;
+  margin: 0;
+  padding: 0;
+  border: none;
 }
 
 #marcadores {
@@ -206,16 +218,16 @@ main {
 
 /* Painel lateral */
 #painel-chamados {
-  flex: 1 1 300px;
+  flex: 1 1 340px;
   max-width: 400px;
+  min-width: 300px;
   background-color: var(--surface-color);
   border: 1px solid var(--border-light);
   border-radius: 14px;
   padding: 1rem;
   box-shadow: var(--shadow-sm);
   overflow-y: auto;
-  max-height: 700px;
-  /* Barra de rolagem vertical personalizada */
+  max-height: 900px;
   scrollbar-width: thin; /* Firefox */
   scrollbar-color: var(--primary-color) #f4f6fb; /* Firefox */
 }
@@ -378,5 +390,18 @@ footer {
   #mapa-e-lista {
     flex-direction: column;
     align-items: center;
+    min-width: 0;
+    max-width: 100%;
+  }
+  #map-container {
+    width: 100vw;
+    min-width: 0;
+    max-width: 100vw;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+  #painel-chamados {
+    max-height: none;
   }
 }
