@@ -12,6 +12,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnCancelarModal = document.getElementById("modal-cancelar");
     const mapWrapper = document.getElementById("map-wrapper");
 
+    // Novos campos para edição de texto
+    const inputTitulo = document.getElementById("modal-titulo");
+    const inputObs = document.getElementById("modal-obs");
+
     let chamados = JSON.parse(localStorage.getItem("chamados") || "[]");
     let marcadoresNoMapa = [];
     let markerIdCounter = chamados.length ? Math.max(...chamados.map(c => c.id)) + 1 : 1;
@@ -28,14 +32,19 @@ document.addEventListener("DOMContentLoaded", () => {
         chamados.forEach(chamado => {
             if (!filtroAtivo(chamado.tipo)) return;
             const li = document.createElement("li");
+            li.className = `chamado ${chamado.tipo}`;
             li.innerHTML = `
-                <strong>${iconeTipo(chamado.tipo)} ${chamado.tipo.toUpperCase()}</strong>
-                <br>
-                <small>${chamado.dataHora}</small>
-                <br>
+                <div class="chamado-header">
+                    <span class="chamado-icone">${iconeTipo(chamado.tipo)}</span>
+                    <span class="chamado-titulo">${chamado.titulo || chamado.tipo.toUpperCase()}</span>
+                </div>
+                <div class="chamado-info">
+                    <span class="chamado-data">${chamado.dataHora}</span>
+                    <a href="pdfs/chamado${chamado.id}.pdf" target="_blank" class="btn-pdf">PDF</a>
+                </div>
+                <div class="chamado-obs">${chamado.obs ? chamado.obs : ""}</div>
                 <button class="editar-chamado" data-id="${chamado.id}"><i class="fa fa-edit"></i> Editar</button>
                 <button class="remover-chamado" data-id="${chamado.id}"><i class="fa fa-trash"></i> Remover</button>
-                <a href="pdfs/chamado${chamado.id}.pdf" target="_blank" class="btn-pdf">PDF</a>
             `;
             listaChamados.appendChild(li);
         });
@@ -92,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
         marcadoresContainer.appendChild(gpsMarker);
         marcadoresNoMapa.push(gpsMarker);
 
-        chamados.push({ id, tipo, dataHora, xPercent, yPercent });
+        chamados.push({ id, tipo, dataHora, xPercent, yPercent, titulo: "", obs: "" });
         ultimoPonto = { xPercent, yPercent }; // Salva o último ponto
         salvarChamados();
         atualizarLista();
@@ -132,21 +141,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Evento de clique no mapa para adicionar marcador (calibrado)
-function ativarClick() {
-    mapaElement.addEventListener("click", (event) => {
-        // Pega a posição do clique relativa à imagem do mapa
-        const rect = mapaElement.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        const xPercent = (x / rect.width) * 100;
-        const yPercent = (y / rect.height) * 100;
-        const tipo = tipoChamadoSelect.value;
-        if (xPercent >= 0 && xPercent <= 100 && yPercent >= 0 && yPercent <= 100) {
-            adicionarMarcador(xPercent, yPercent, tipo);
-            desenharMarcadores();
-        }
-    });
-}
+    function ativarClick() {
+        mapaElement.addEventListener("click", (event) => {
+            // Pega a posição do clique relativa à imagem do mapa
+            const rect = mapaElement.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const xPercent = (x / rect.width) * 100;
+            const yPercent = (y / rect.height) * 100;
+            const tipo = tipoChamadoSelect.value;
+            if (xPercent >= 0 && xPercent <= 100 && yPercent >= 0 && yPercent <= 100) {
+                adicionarMarcador(xPercent, yPercent, tipo);
+                desenharMarcadores();
+            }
+        });
+    }
 
     if (mapaElement.complete) {
         ativarClick();
@@ -175,14 +184,16 @@ function ativarClick() {
         });
     });
 
-    // Função para editar chamado
+    // Função para editar chamado (agora com campos de texto)
     function editarChamado(id) {
-        if (!modal || !selectModal || !btnSalvarModal || !btnCancelarModal) return;
+        if (!modal || !selectModal || !btnSalvarModal || !btnCancelarModal || !inputTitulo || !inputObs) return;
 
         const chamado = chamados.find(c => c.id === id);
         if (!chamado) return;
 
         selectModal.value = chamado.tipo;
+        inputTitulo.value = chamado.titulo || "";
+        inputObs.value = chamado.obs || "";
         modal.classList.add("show");
 
         function fecharModal() {
@@ -195,6 +206,8 @@ function ativarClick() {
 
         function salvar() {
             chamado.tipo = selectModal.value;
+            chamado.titulo = inputTitulo.value;
+            chamado.obs = inputObs.value;
             salvarChamados();
 
             const marker = document.querySelector(`.gps-marker[data-id="${id}"]`);
@@ -307,7 +320,7 @@ function ativarClick() {
 
         mapWrapper.addEventListener("mouseenter", () => {
             if (zoomLevel > 1) mapWrapper.classList.add("grab");
-          });
+        });
         mapWrapper.addEventListener("mouseleave", () => {
             mapWrapper.classList.remove("grab");
         });

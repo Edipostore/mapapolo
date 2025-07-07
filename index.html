@@ -56,15 +56,7 @@
       <aside id="painel-chamados">
         <h2>📋 Lista de Chamados</h2>
         <ul id="lista-chamados">
-          <li>
-            Chamado Urgente - Loja 10
-            <a href="pdfs/chamado1.pdf" target="_blank" class="btn-pdf">PDF</a>
-          </li>
-          <li>
-            Chamado Escada - Corredor 2
-            <a href="pdfs/chamado2.pdf" target="_blank" class="btn-pdf">PDF</a>
-          </li>
-          <!-- Adicione mais chamados conforme necessário -->
+          <!-- Itens gerados dinamicamente pelo JS -->
         </ul>
       </aside>
     </section>
@@ -76,14 +68,25 @@
   <!-- Modal de Edição -->
   <div id="modal-edicao" class="modal hidden">
     <div class="modal-content">
-      <h3>Editar Tipo de Chamado</h3>
-      <select id="modal-tipo">
-        <option value="urgente">🚨 Urgente</option>
-        <option value="ronda">👮 Ronda</option>
-        <option value="preventiva">🛠️ Preventiva</option>
-        <option value="item">📦 Item</option>
-        <option value="escada">🪜 Escada</option>
-      </select>
+      <h3>Editar Chamado</h3>
+      <label>
+        Tipo:
+        <select id="modal-tipo">
+          <option value="urgente">🚨 Urgente</option>
+          <option value="ronda">👮 Ronda</option>
+          <option value="preventiva">🛠️ Preventiva</option>
+          <option value="item">📦 Item</option>
+          <option value="escada">🪜 Escada</option>
+        </select>
+      </label>
+      <label>
+        Título:
+        <input type="text" id="modal-titulo" />
+      </label>
+      <label>
+        Observação:
+        <input type="text" id="modal-obs" />
+      </label>
       <div class="modal-actions">
         <button id="modal-salvar">Salvar</button>
         <button id="modal-cancelar">Cancelar</button>
@@ -93,3 +96,4 @@
 
   <script src="assets/js/script.js" defer></script>
 </body>
+</html>
