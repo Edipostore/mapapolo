@@ -1,0 +1,11 @@
+{
+  "name": "Rastreamento Polo Shopping",
+  "short_name": "Rastreamento",
+  "description": "Sistema de rastreamento de itens e pessoas do Polo Shopping",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#6366f1",
+  "orientation": "any",
+  "icons": []
+}

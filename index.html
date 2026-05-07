@@ -1,42 +1,119 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mapa Interativo de Chamados</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rastreamento - Polo Shopping</title>
+  <meta name="description" content="Sistema de rastreamento de itens e pessoas do Polo Shopping" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; img-src 'self' data:; font-src 'self' https://cdnjs.cloudflare.com;" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#6366f1" />
   <link rel="stylesheet" href="assets/css/styles.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
-  <nav id="navbar">
-    <!-- Navbar opcional -->
-  </nav>
-
   <header>
-    <h1>Mapa Interativo de Chamados</h1>
+    <div class="header-top">
+      <h1><i class="fa-solid fa-satellite-dish"></i> Rastreamento Polo Shopping</h1>
+      <div class="header-actions">
+        <select id="turno-select" title="Turno atual">
+          <option value="manha" selected>Manhã (06h-14h)</option>
+          <option value="tarde">Tarde (14h-22h)</option>
+          <option value="noite">Noite (22h-06h)</option>
+        </select>
+        <button id="btn-historico" title="Histórico"><i class="fa-solid fa-clock-rotate-left"></i></button>
+        <button id="btn-theme" title="Alternar tema"><i class="fa-solid fa-moon"></i></button>
+        <button id="btn-exportar" title="Exportar CSV"><i class="fa-solid fa-file-export"></i></button>
+      </div>
+    </div>
+    <p class="subtitle">Controle de itens e pessoas em tempo real</p>
   </header>
+
+  <section id="dashboard">
+    <div class="card-counter">
+      <i class="fa-solid fa-users"></i>
+      <div>
+        <span class="counter-value" id="count-pessoas">0</span>
+        <span class="counter-label">Pessoas Ativas</span>
+      </div>
+    </div>
+    <div class="card-counter">
+      <i class="fa-solid fa-boxes-stacked"></i>
+      <div>
+        <span class="counter-value" id="count-itens">0</span>
+        <span class="counter-label">Itens Rastreados</span>
+      </div>
+    </div>
+    <div class="card-counter card-alerta">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <div>
+        <span class="counter-value" id="count-alertas">0</span>
+        <span class="counter-label">Alertas</span>
+      </div>
+    </div>
+    <div class="card-counter">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      <div>
+        <span class="counter-value" id="count-total">0</span>
+        <span class="counter-label">Total Registros</span>
+      </div>
+    </div>
+  </section>
 
   <main>
     <section id="controls">
-      <label for="tipo-chamado">Tipo de Chamado:</label>
-      <select id="tipo-chamado">
-        <option value="urgente">🚨 Urgente</option>
-        <option value="ronda">👮 Ronda</option>
-        <option value="preventiva">🛠️ Preventiva</option>
-        <option value="item">📦 Item</option>
-        <option value="escada">🪜 Escada</option>
-      </select>
+      <div class="control-group">
+        <label for="tipo-registro">Tipo:</label>
+        <select id="tipo-registro">
+          <optgroup label="Pessoas">
+            <option value="pessoa" selected>Pessoa</option>
+            <option value="seguranca">Segurança</option>
+            <option value="manutencao">Manutenção</option>
+            <option value="limpeza">Limpeza</option>
+          </optgroup>
+          <optgroup label="Itens">
+            <option value="radio">Rádio</option>
+            <option value="chave">Chave</option>
+            <option value="extintor">Extintor</option>
+            <option value="camera">Câmera</option>
+            <option value="ferramenta">Ferramenta</option>
+            <option value="outro-item">Outro Item</option>
+          </optgroup>
+        </select>
+      </div>
 
-      <button id="btn-limpar-pontos">🧹 Limpar Pontos</button>
+      <div class="control-group">
+        <label for="nome-registro">Nome / Identificação:</label>
+        <input type="text" id="nome-registro" placeholder="Ex: João Silva, Rádio #5..." />
+      </div>
+
+      <div class="control-group">
+        <label for="status-registro">Status:</label>
+        <select id="status-registro">
+          <option value="ativo" selected>Ativo</option>
+          <option value="inativo">Inativo</option>
+          <option value="alerta">Alerta</option>
+          <option value="em-movimento">Em Movimento</option>
+        </select>
+      </div>
+
+      <div class="control-actions">
+        <button id="btn-limpar" class="btn-danger" title="Limpar tudo"><i class="fa-solid fa-trash-can"></i> Limpar</button>
+      </div>
 
       <fieldset id="filtros">
-        <legend>Filtrar por Tipo:</legend>
-        <label><input type="checkbox" value="urgente" checked /> Urgente</label>
-        <label><input type="checkbox" value="ronda" checked /> Ronda</label>
-        <label><input type="checkbox" value="preventiva" checked /> Preventiva</label>
-        <label><input type="checkbox" value="item" checked /> Item</label>
-        <label><input type="checkbox" value="escada" checked /> Escada</label>
+        <legend>Filtrar:</legend>
+        <label><input type="checkbox" value="pessoa" checked /> Pessoas</label>
+        <label><input type="checkbox" value="item" checked /> Itens</label>
+        <label><input type="checkbox" value="alerta" checked /> Alertas</label>
       </fieldset>
+    </section>
+
+    <section id="andares-tabs">
+      <button class="tab-andar active" data-andar="terreo">Térreo</button>
+      <button class="tab-andar" data-andar="piso1">1º Piso</button>
+      <button class="tab-andar" data-andar="piso2">2º Piso</button>
+      <button class="tab-andar" data-andar="externo">Externo</button>
     </section>
 
     <section id="mapa-e-lista">
@@ -44,55 +121,97 @@
         <div id="map-wrapper">
           <img src="assets/img/shop (1).png" alt="Mapa do Polo Shopping" id="mapa" />
           <div id="marcadores"></div>
+          <svg id="rastro-svg" class="rastro-layer"></svg>
         </div>
-
         <div id="zoom-controls">
-          <button id="zoom-in" title="Aumentar Zoom">🔍+</button>
-          <button id="zoom-out" title="Reduzir Zoom">🔍−</button>
-          <button id="zoom-reset" title="Redefinir Zoom">🔄</button>
+          <button id="zoom-in" title="Zoom +"><i class="fa-solid fa-plus"></i></button>
+          <button id="zoom-out" title="Zoom -"><i class="fa-solid fa-minus"></i></button>
+          <button id="zoom-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i></button>
+        </div>
+        <div id="map-label">
+          <span id="andar-atual-label">Térreo</span>
         </div>
       </div>
 
-      <aside id="painel-chamados">
-        <h2>📋 Lista de Chamados</h2>
-        <ul id="lista-chamados">
-          <!-- Itens gerados dinamicamente pelo JS -->
-        </ul>
+      <aside id="painel-lista">
+        <div class="painel-header">
+          <h2><i class="fa-solid fa-list-check"></i> Registros</h2>
+          <div class="busca-container">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="busca-registro" placeholder="Buscar..." />
+          </div>
+        </div>
+        <ul id="lista-registros"></ul>
       </aside>
     </section>
   </main>
 
-  <footer id="footer">
-    <p>&copy; 2025 - Mapa Interativo de Chamados</p>
-  </footer>
-  <!-- Modal de Edição -->
   <div id="modal-edicao" class="modal hidden">
     <div class="modal-content">
-      <h3>Editar Chamado</h3>
-      <label>
-        Tipo:
+      <h3><i class="fa-solid fa-pen"></i> Editar Registro</h3>
+      <label>Tipo:
         <select id="modal-tipo">
-          <option value="urgente">🚨 Urgente</option>
-          <option value="ronda">👮 Ronda</option>
-          <option value="preventiva">🛠️ Preventiva</option>
-          <option value="item">📦 Item</option>
-          <option value="escada">🪜 Escada</option>
+          <optgroup label="Pessoas">
+            <option value="pessoa">Pessoa</option>
+            <option value="seguranca">Segurança</option>
+            <option value="manutencao">Manutenção</option>
+            <option value="limpeza">Limpeza</option>
+          </optgroup>
+          <optgroup label="Itens">
+            <option value="radio">Rádio</option>
+            <option value="chave">Chave</option>
+            <option value="extintor">Extintor</option>
+            <option value="camera">Câmera</option>
+            <option value="ferramenta">Ferramenta</option>
+            <option value="outro-item">Outro Item</option>
+          </optgroup>
         </select>
       </label>
-      <label>
-        Título:
-        <input type="text" id="modal-titulo" />
+      <label>Nome: <input type="text" id="modal-nome" /></label>
+      <label>Status:
+        <select id="modal-status">
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+          <option value="alerta">Alerta</option>
+          <option value="em-movimento">Em Movimento</option>
+        </select>
       </label>
-      <label>
-        Observação:
-        <input type="text" id="modal-obs" />
-      </label>
+      <label>Observação: <input type="text" id="modal-obs" /></label>
       <div class="modal-actions">
-        <button id="modal-salvar">Salvar</button>
-        <button id="modal-cancelar">Cancelar</button>
+        <button id="modal-salvar"><i class="fa-solid fa-check"></i> Salvar</button>
+        <button id="modal-cancelar" class="btn-secondary"><i class="fa-solid fa-xmark"></i> Cancelar</button>
       </div>
     </div>
   </div>
+
+  <div id="modal-historico" class="modal hidden">
+    <div class="modal-content modal-wide">
+      <div class="modal-hist-header">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Atividades</h3>
+        <button id="btn-exportar-hist" title="Exportar histórico"><i class="fa-solid fa-download"></i></button>
+      </div>
+      <div class="hist-filtros">
+        <input type="date" id="hist-data" />
+        <select id="hist-tipo-filtro">
+          <option value="">Todos os tipos</option>
+          <option value="adicionado">Adicionados</option>
+          <option value="editado">Editados</option>
+          <option value="movido">Movidos</option>
+          <option value="removido">Removidos</option>
+        </select>
+      </div>
+      <ul id="lista-historico"></ul>
+      <div class="modal-actions">
+        <button id="hist-fechar" class="btn-secondary"><i class="fa-solid fa-xmark"></i> Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <footer>
+    <p>&copy; 2025 Polo Shopping - Sistema de Rastreamento v2.0</p>
+  </footer>
 
   <script src="assets/js/script.js" defer></script>
 </body>
