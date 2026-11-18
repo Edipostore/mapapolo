@@ -53,6 +53,58 @@ document.addEventListener("DOMContentLoaded", () => {
   let nextId = 1;
   let andarAtual = "terreo";
   let turnoAtual = detectarTurno();
+  const TIPOS_PESSOA = ["pessoa", "seguranca", "manutencao", "limpeza"];
+  const TIPOS_ITEM = ["radio", "chave", "extintor", "camera", "ferramenta", "outro-item"];
+  const TIPOS_VALIDOS = [...TIPOS_PESSOA, ...TIPOS_ITEM];
+  const STATUS_VALIDOS = ["ativo", "inativo", "alerta", "em-movimento"];
+  const ANDARES_VALIDOS = ["terreo", "piso1", "piso2", "externo"];
+  const TURNOS_VALIDOS = ["manha", "tarde", "noite"];
+
+  function validarRegistros(valor) {
+    if (!Array.isArray(valor)) return [];
+    return valor.flatMap(function(reg) {
+      if (!reg || !Number.isInteger(reg.id) || reg.id < 1 ||
+          !TIPOS_VALIDOS.includes(reg.tipo) || typeof reg.nome !== "string" ||
+          !STATUS_VALIDOS.includes(reg.status) || !ANDARES_VALIDOS.includes(reg.andar) ||
+          !Number.isFinite(reg.x) || reg.x < 0 || reg.x > 100 ||
+          !Number.isFinite(reg.y) || reg.y < 0 || reg.y > 100) return [];
+      var historico = Array.isArray(reg.historico) ? reg.historico.flatMap(function(ponto) {
+        if (!ponto || !Number.isFinite(ponto.x) || ponto.x < 0 || ponto.x > 100 ||
+            !Number.isFinite(ponto.y) || ponto.y < 0 || ponto.y > 100) return [];
+        return [{ x: ponto.x, y: ponto.y, dataHora: typeof ponto.dataHora === "string" ? ponto.dataHora : "" }];
+      }) : [];
+      return [{
+        id: reg.id,
+        tipo: reg.tipo,
+        nome: reg.nome.slice(0, 120),
+        status: reg.status,
+        x: reg.x,
+        y: reg.y,
+        andar: reg.andar,
+        turno: TURNOS_VALIDOS.includes(reg.turno) ? reg.turno : "",
+        obs: typeof reg.obs === "string" ? reg.obs.slice(0, 500) : "",
+        dataHora: typeof reg.dataHora === "string" ? reg.dataHora : "",
+        historico: historico.slice(-500)
+      }];
+    });
+  }
+
+  function validarHistorico(valor) {
+    if (!Array.isArray(valor)) return [];
+    return valor.flatMap(function(log) {
+      if (!log || !["adicionado", "editado", "movido", "removido"].includes(log.acao) ||
+          typeof log.nome !== "string") return [];
+      return [{
+        acao: log.acao,
+        nome: log.nome.slice(0, 120),
+        detalhes: typeof log.detalhes === "string" ? log.detalhes.slice(0, 500) : "",
+        turno: TURNOS_VALIDOS.includes(log.turno) ? log.turno : "",
+        andar: ANDARES_VALIDOS.includes(log.andar) ? log.andar : "",
+        dataHora: typeof log.dataHora === "string" ? log.dataHora : "",
+        timestamp: typeof log.timestamp === "string" ? log.timestamp : ""
+      }];
+    }).slice(-1000);
+  }
 
   // Zoom
   const btnZoomIn = document.getElementById("zoom-in");
@@ -60,16 +112,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnZoomReset = document.getElementById("zoom-reset");
   let zoom = 1, panX = 0, panY = 0;
   let dragging = false, dragStartX, dragStartY;
+  let suppressNextClick = false;
 
   // Carregar dados
   try {
     const dadosSalvos = localStorage.getItem("registros_v2");
-    if (dadosSalvos) {
-      registros = JSON.parse(dadosSalvos);
-      if (registros.length > 0) {
-        nextId = Math.max(...registros.map(r => r.id)) + 1;
-      }
-    }
+    if (dadosSalvos) registros = validarRegistros(JSON.parse(dadosSalvos));
+    nextId = registros.reduce(function(maior, reg) { return Math.max(maior, reg.id); }, 0) + 1;
   } catch (e) {
     console.error("Erro ao carregar registros:", e);
     registros = [];
@@ -77,16 +126,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   try {
     const logSalvo = localStorage.getItem("log_atividades");
-    if (logSalvo) logAtividades = JSON.parse(logSalvo);
+    if (logSalvo) logAtividades = validarHistorico(JSON.parse(logSalvo));
   } catch (e) {
     console.error("Erro ao carregar log:", e);
     logAtividades = [];
   }
 
   // === UTILIDADES ===
-  const TIPOS_PESSOA = ["pessoa", "seguranca", "manutencao", "limpeza"];
-  const TIPOS_ITEM = ["radio", "chave", "extintor", "camera", "ferramenta", "outro-item"];
-
   function ehPessoa(tipo) { return TIPOS_PESSOA.includes(tipo); }
   function ehItem(tipo) { return TIPOS_ITEM.includes(tipo); }
 
@@ -123,6 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem("log_atividades", JSON.stringify(logAtividades.slice(-1000)));
     } catch (e) {
       console.error("Erro ao salvar log:", e);
+      toast("Não foi possível salvar o histórico.", "erro");
     }
   }
 
@@ -141,7 +188,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const el = document.createElement("div");
     el.className = "toast" + (tipo ? " toast-" + tipo : "");
     const icone = tipo === "alerta" ? "fa-triangle-exclamation" : tipo === "sucesso" ? "fa-check" : tipo === "erro" ? "fa-xmark" : "fa-info-circle";
-    el.innerHTML = '<i class="fa-solid ' + icone + '"></i> ' + msg;
+    const icon = document.createElement("i");
+    icon.className = "fa-solid " + icone;
+    icon.setAttribute("aria-hidden", "true");
+    el.append(icon, document.createTextNode(" " + String(msg)));
     toastContainer.appendChild(el);
     setTimeout(function() {
       if (el.parentNode) el.remove();
@@ -159,7 +209,9 @@ document.addEventListener("DOMContentLoaded", () => {
       osc.frequency.value = 800; gain.gain.value = 0.3;
       osc.start();
       setTimeout(function() { osc.stop(); ctx.close(); }, 200);
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Não foi possível reproduzir o alerta sonoro:", e);
+    }
   }
 
   function verificarAlertas() {
@@ -212,25 +264,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // === RASTRO ===
   function renderRastro() {
-    rastroSvg.innerHTML = "";
+    rastroSvg.replaceChildren();
     var visiveis = filtrarRegistros();
     visiveis.forEach(function(reg) {
       if (!reg.historico || reg.historico.length < 2) return;
       var polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-      var rect = rastroSvg.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
+      var width = rastroSvg.clientWidth;
+      var height = rastroSvg.clientHeight;
+      if (width === 0 || height === 0) return;
       var pontos = reg.historico.map(function(h) {
-        return (h.x / 100) * rect.width + "," + (h.y / 100) * rect.height;
+        return (h.x / 100) * width + "," + (h.y / 100) * height;
       }).join(" ");
       polyline.setAttribute("points", pontos);
-      polyline.style.strokeWidth = (2 / zoom).toString();
+      polyline.style.strokeWidth = "2";
       rastroSvg.appendChild(polyline);
     });
   }
 
   // === RENDER MARCADORES (CORRIGIDO) ===
   function renderMarcadores() {
-    marcadores.innerHTML = "";
+    marcadores.replaceChildren();
     var visiveis = filtrarRegistros();
     
     visiveis.forEach(function(reg) {
@@ -241,12 +294,21 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.top = reg.y + "%";
       el.setAttribute("data-tooltip", reg.nome + " (" + reg.status + ")");
       el.setAttribute("data-id", reg.id);
-      
+      el.setAttribute("role", "button");
+      el.setAttribute("tabindex", "0");
+      el.setAttribute("aria-label", reg.nome + ", status " + reg.status + ". Abrir edição.");
       el.addEventListener("click", function(e) {
         e.stopPropagation();
         abrirModal(reg.id);
       });
-      
+      el.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.stopPropagation();
+          abrirModal(reg.id);
+        }
+      });
+
       marcadores.appendChild(el);
     });
     
@@ -256,32 +318,60 @@ document.addEventListener("DOMContentLoaded", () => {
   function ajustarMarcadoresComZoom() {
     var markers = marcadores.querySelectorAll(".gps-marker");
     markers.forEach(function(marker) {
-      var scale = 1 / zoom;
-      marker.style.transform = "translate(-50%, -50%) scale(" + scale + ")";
+      marker.style.transform = "translate(-50%, -50%)";
     });
   }
 
   // === RENDER LISTA ===
   function renderLista() {
-    lista.innerHTML = "";
+    lista.replaceChildren();
     var visiveis = filtrarRegistros();
     if (visiveis.length === 0) {
-      lista.innerHTML = '<li style="text-align:center;color:var(--text-muted);border:none;background:none;">Nenhum registro encontrado</li>';
+      var vazio = document.createElement("li");
+      vazio.className = "empty-state";
+      vazio.textContent = "Nenhum registro encontrado";
+      lista.appendChild(vazio);
       return;
     }
     visiveis.forEach(function(reg) {
       var li = document.createElement("li");
       li.className = "tipo-" + reg.tipo;
-      li.innerHTML = '<div class="registro-header">' +
-        '<span class="registro-nome"><i class="fa-solid ' + iconeTipo(reg.tipo) + '"></i> ' + reg.nome + '</span>' +
-        '<span class="registro-badge badge-' + reg.status + '">' + reg.status.replace("-", " ") + '</span>' +
-        '</div>' +
-        '<div class="registro-meta">' + reg.dataHora + ' | Turno: ' + (reg.turno || "-") + (reg.obs ? " | " + reg.obs : "") + '</div>' +
-        '<div class="registro-actions">' +
-        '<button class="btn-editar" data-id="' + reg.id + '" title="Editar"><i class="fa-solid fa-pen"></i></button>' +
-        '<button class="btn-mover" data-id="' + reg.id + '" title="Mover posição"><i class="fa-solid fa-arrows-up-down-left-right"></i></button>' +
-        '<button class="btn-remover" data-id="' + reg.id + '" title="Remover"><i class="fa-solid fa-trash"></i></button>' +
-        '</div>';
+      var header = document.createElement("div");
+      header.className = "registro-header";
+      var nome = document.createElement("span");
+      nome.className = "registro-nome";
+      var icone = document.createElement("i");
+      icone.className = "fa-solid " + iconeTipo(reg.tipo);
+      icone.setAttribute("aria-hidden", "true");
+      nome.append(icone, document.createTextNode(" " + reg.nome));
+      var badge = document.createElement("span");
+      badge.className = "registro-badge badge-" + reg.status;
+      badge.textContent = reg.status.replace("-", " ");
+      header.append(nome, badge);
+
+      var meta = document.createElement("div");
+      meta.className = "registro-meta";
+      meta.textContent = reg.dataHora + " | Turno: " + (reg.turno || "-") + (reg.obs ? " | " + reg.obs : "");
+      var actions = document.createElement("div");
+      actions.className = "registro-actions";
+      [
+        ["btn-editar", "Editar", "fa-pen"],
+        ["btn-mover", "Mover posição", "fa-arrows-up-down-left-right"],
+        ["btn-remover", "Remover", "fa-trash"]
+      ].forEach(function(config) {
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = config[0];
+        button.dataset.id = String(reg.id);
+        button.title = config[1];
+        button.setAttribute("aria-label", config[1] + " " + reg.nome);
+        var icon = document.createElement("i");
+        icon.className = "fa-solid " + config[2];
+        icon.setAttribute("aria-hidden", "true");
+        button.appendChild(icon);
+        actions.appendChild(button);
+      });
+      li.append(header, meta, actions);
       lista.appendChild(li);
     });
     lista.querySelectorAll(".btn-editar").forEach(function(btn) {
@@ -340,11 +430,14 @@ document.addEventListener("DOMContentLoaded", () => {
   function abrirModal(id) {
     var reg = registros.find(function(r) { return r.id === id; });
     if (!reg) return;
+    var focoAnterior = document.activeElement;
+    var dialogo = modal.querySelector('[role="dialog"]');
     modalTipo.value = reg.tipo;
     modalNome.value = reg.nome;
     modalStatus.value = reg.status;
     modalObs.value = reg.obs || "";
     modal.classList.remove("hidden");
+    modalNome.focus();
 
     function fechar() {
       modal.classList.add("hidden");
@@ -352,6 +445,12 @@ document.addEventListener("DOMContentLoaded", () => {
       btnCancelar.removeEventListener("click", fechar);
       document.removeEventListener("keydown", esc);
       modal.removeEventListener("click", fora);
+      if (focoAnterior && focoAnterior.isConnected && typeof focoAnterior.focus === "function") {
+        focoAnterior.focus();
+      } else {
+        var botaoEditar = lista.querySelector('.btn-editar[data-id="' + reg.id + '"]');
+        if (botaoEditar) botaoEditar.focus();
+      }
     }
 
     function salvarEdit() {
@@ -364,7 +463,24 @@ document.addEventListener("DOMContentLoaded", () => {
       toast("Registro atualizado", "sucesso");
     }
 
-    function esc(e) { if (e.key === "Escape") fechar(); }
+    function esc(e) {
+      if (e.key === "Escape") fechar();
+      if (e.key === "Tab" && dialogo) {
+        var campos = Array.from(dialogo.querySelectorAll("button, input, select")).filter(function(el) {
+          return !el.disabled && el.offsetParent !== null;
+        });
+        if (campos.length === 0) return;
+        var primeiro = campos[0];
+        var ultimo = campos[campos.length - 1];
+        if (e.shiftKey && document.activeElement === primeiro) {
+          e.preventDefault();
+          ultimo.focus();
+        } else if (!e.shiftKey && document.activeElement === ultimo) {
+          e.preventDefault();
+          primeiro.focus();
+        }
+      }
+    }
     function fora(e) { if (e.target === modal) fechar(); }
     btnSalvar.addEventListener("click", salvarEdit);
     btnCancelar.addEventListener("click", fechar);
@@ -374,10 +490,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // === CLIQUE NO MAPA (CORRIGIDO) ===
   function onMapClick(e) {
+    if (suppressNextClick) {
+      suppressNextClick = false;
+      return;
+    }
     e.preventDefault();
-    var rect = mapa.getBoundingClientRect();
-    var x = ((e.clientX - rect.left) / rect.width) * 100;
-    var y = ((e.clientY - rect.top) / rect.height) * 100;
+    var x = (e.offsetX / mapWrapper.clientWidth) * 100;
+    var y = (e.offsetY / mapWrapper.clientHeight) * 100;
     
     // Garantir que está dentro dos limites
     if (x < 0 || x > 100 || y < 0 || y > 100) return;
@@ -426,8 +545,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // === ANDARES ===
   tabsAndar.forEach(function(tab) {
     tab.addEventListener("click", function() {
-      tabsAndar.forEach(function(t) { t.classList.remove("active"); });
+      tabsAndar.forEach(function(t) {
+        t.classList.remove("active");
+        t.setAttribute("aria-selected", "false");
+      });
       tab.classList.add("active");
+      tab.setAttribute("aria-selected", "true");
       andarAtual = tab.dataset.andar;
       andarLabel.textContent = tab.textContent;
       render();
@@ -439,7 +562,13 @@ document.addEventListener("DOMContentLoaded", () => {
   turnoSelect.addEventListener("change", function() { turnoAtual = turnoSelect.value; });
 
   // === DARK MODE ===
-  var savedTheme = localStorage.getItem("theme") || "light";
+  var savedTheme = "light";
+  try {
+    savedTheme = localStorage.getItem("theme") || "light";
+  } catch (e) {
+    console.error("Erro ao carregar tema:", e);
+  }
+  if (savedTheme !== "dark" && savedTheme !== "light") savedTheme = "light";
   document.documentElement.setAttribute("data-theme", savedTheme);
   atualizarIconeTema(savedTheme);
 
@@ -447,34 +576,70 @@ document.addEventListener("DOMContentLoaded", () => {
     var atual = document.documentElement.getAttribute("data-theme");
     var novo = atual === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", novo);
-    localStorage.setItem("theme", novo);
+    try {
+      localStorage.setItem("theme", novo);
+    } catch (e) {
+      console.error("Erro ao salvar tema:", e);
+      toast("Não foi possível salvar sua preferência de tema.", "erro");
+    }
     atualizarIconeTema(novo);
   });
 
   function atualizarIconeTema(theme) {
-    btnTheme.innerHTML = theme === "dark" ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    var icon = document.createElement("i");
+    icon.className = "fa-solid " + (theme === "dark" ? "fa-sun" : "fa-moon");
+    icon.setAttribute("aria-hidden", "true");
+    btnTheme.replaceChildren(icon);
+    btnTheme.setAttribute("aria-label", theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro");
+  }
+
+  function csvField(value) {
+    var text = String(value == null ? "" : value);
+    if (/^[\t\r\n ]*[=+\-@]/.test(text)) text = "'" + text;
+    return '"' + text.replace(/"/g, '""') + '"';
+  }
+
+  function baixarCsv(nomeArquivo, cabecalho, linhas) {
+    var conteudo = "\uFEFF" + [cabecalho, ...linhas].map(function(linha) {
+      return linha.map(csvField).join(",");
+    }).join("\r\n");
+    var url = URL.createObjectURL(new Blob([conteudo], { type: "text/csv;charset=utf-8;" }));
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = nomeArquivo;
+    link.hidden = true;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
   }
 
   // === EXPORTAR CSV ===
   btnExportar.addEventListener("click", function() {
     var dados = registros.filter(function(r) { return r.andar === andarAtual; });
     if (dados.length === 0) { toast("Nenhum dado para exportar", "alerta"); return; }
-    var header = "ID,Tipo,Nome,Status,Andar,Turno,Data/Hora,Observação,X%,Y%\n";
-    var linhas = dados.map(function(r) {
-      return r.id + "," + r.tipo + "," + r.nome + "," + r.status + "," + r.andar + "," + (r.turno || "") + "," + r.dataHora + ',"' + (r.obs || "") + '",' + r.x.toFixed(2) + "," + r.y.toFixed(2);
-    }).join("\n");
-    var blob = new Blob([header + linhas], { type: "text/csv;charset=utf-8;" });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a"); a.href = url;
-    a.download = "rastreamento_" + andarAtual + "_" + new Date().toISOString().slice(0, 10) + ".csv";
-    a.click(); URL.revokeObjectURL(url);
+    baixarCsv(
+      "rastreamento_" + andarAtual + "_" + new Date().toISOString().slice(0, 10) + ".csv",
+      ["ID", "Tipo", "Nome", "Status", "Andar", "Turno", "Data/Hora", "Observação", "X%", "Y%"],
+      dados.map(function(r) {
+        return [r.id, r.tipo, r.nome, r.status, r.andar, r.turno, r.dataHora, r.obs, r.x.toFixed(2), r.y.toFixed(2)];
+      })
+    );
     toast("CSV exportado com sucesso!", "sucesso");
   });
 
   // === ZOOM ===
-  function aplicarZoom() {
-    mapWrapper.style.transform = "scale(" + zoom + ") translate(" + (panX / zoom) + "px, " + (panY / zoom) + "px)";
+  function definirTransformacaoMapa() {
+    var inclinacao = getComputedStyle(mapContainer).getPropertyValue("--map-tilt").trim() || "6deg";
+    mapWrapper.style.width = (zoom * 100) + "%";
+    mapWrapper.style.height = (zoom * 100) + "%";
+    mapWrapper.style.setProperty("--map-zoom", String(zoom));
+    mapWrapper.style.transform = "translate(-50%, -50%) rotateX(" + inclinacao + ") translate(" + panX + "px, " + panY + "px)";
     mapWrapper.style.transformOrigin = "center center";
+  }
+
+  function aplicarZoom() {
+    definirTransformacaoMapa();
     mapWrapper.style.cursor = zoom > 1 ? (dragging ? "grabbing" : "grab") : (moverIdAtivo !== null ? "move" : "crosshair");
     ajustarMarcadoresComZoom();
   }
@@ -494,21 +659,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }, { passive: false });
   }
 
-  mapWrapper.addEventListener("mousedown", function(e) {
-    if (zoom <= 1 || moverIdAtivo !== null) return;
+  mapWrapper.addEventListener("pointerdown", function(e) {
+    if (zoom <= 1 || moverIdAtivo !== null || e.button !== 0 || e.target.closest(".gps-marker")) return;
     dragging = true; dragStartX = e.clientX - panX; dragStartY = e.clientY - panY;
+    if (mapWrapper.setPointerCapture) mapWrapper.setPointerCapture(e.pointerId);
     mapWrapper.style.cursor = "grabbing"; e.preventDefault();
   });
 
-  window.addEventListener("mousemove", function(e) {
+  window.addEventListener("pointermove", function(e) {
     if (!dragging) return;
     panX = e.clientX - dragStartX; panY = e.clientY - dragStartY;
-    mapWrapper.style.transform = "scale(" + zoom + ") translate(" + (panX / zoom) + "px, " + (panY / zoom) + "px)";
+    definirTransformacaoMapa();
     ajustarMarcadoresComZoom();
   });
 
-  window.addEventListener("mouseup", function() {
-    if (dragging) { dragging = false; mapWrapper.style.cursor = zoom > 1 ? "grab" : "crosshair"; }
+  window.addEventListener("pointerup", function() {
+    if (dragging) {
+      dragging = false;
+      suppressNextClick = true;
+      mapWrapper.style.cursor = zoom > 1 ? "grab" : "crosshair";
+      window.setTimeout(function() { suppressNextClick = false; }, 500);
+    }
   });
 
   // === VERIFICACAO PERIODICA ===
@@ -523,44 +694,90 @@ document.addEventListener("DOMContentLoaded", () => {
     var logs = [].concat(logAtividades).reverse();
     if (histData && histData.value) logs = logs.filter(function(l) { return l.timestamp && l.timestamp.indexOf(histData.value) === 0; });
     if (histTipoFiltro && histTipoFiltro.value) logs = logs.filter(function(l) { return l.acao === histTipoFiltro.value; });
-    listaHistorico.innerHTML = "";
+    listaHistorico.replaceChildren();
     if (logs.length === 0) {
-      listaHistorico.innerHTML = '<li style="justify-content:center;color:var(--text-muted);">Nenhuma atividade registrada</li>';
+      var vazio = document.createElement("li");
+      vazio.className = "empty-state";
+      vazio.textContent = "Nenhuma atividade registrada";
+      listaHistorico.appendChild(vazio);
       return;
     }
     var icones = { adicionado: "fa-plus", editado: "fa-pen", movido: "fa-arrows-up-down-left-right", removido: "fa-trash" };
     logs.slice(0, 200).forEach(function(log) {
       var li = document.createElement("li");
-      li.innerHTML = '<div class="hist-icon ' + log.acao + '"><i class="fa-solid ' + (icones[log.acao] || "fa-circle") + '"></i></div>' +
-        '<div class="hist-info"><strong>' + log.nome + ' - ' + log.acao + '</strong>' +
-        '<small>' + log.dataHora + ' | Turno: ' + log.turno + ' | ' + (log.detalhes || "") + '</small></div>';
+      var histIcon = document.createElement("div");
+      histIcon.className = "hist-icon " + log.acao;
+      var icon = document.createElement("i");
+      icon.className = "fa-solid " + icones[log.acao];
+      icon.setAttribute("aria-hidden", "true");
+      histIcon.appendChild(icon);
+      var info = document.createElement("div");
+      info.className = "hist-info";
+      var title = document.createElement("strong");
+      title.textContent = log.nome + " - " + log.acao;
+      var details = document.createElement("small");
+      details.textContent = log.dataHora + " | Turno: " + log.turno + " | " + log.detalhes;
+      info.append(title, details);
+      li.append(histIcon, info);
       listaHistorico.appendChild(li);
     });
   }
 
-  if (btnHistorico) btnHistorico.addEventListener("click", function() { modalHistorico.classList.remove("hidden"); renderHistorico(); });
-  if (btnHistFechar) btnHistFechar.addEventListener("click", function() { modalHistorico.classList.add("hidden"); });
-  if (modalHistorico) modalHistorico.addEventListener("click", function(e) { if (e.target === modalHistorico) modalHistorico.classList.add("hidden"); });
+  var focoAnteriorHistorico = null;
+  function fecharHistorico() {
+    modalHistorico.classList.add("hidden");
+    if (focoAnteriorHistorico && typeof focoAnteriorHistorico.focus === "function") focoAnteriorHistorico.focus();
+  }
+  function abrirHistorico() {
+    focoAnteriorHistorico = document.activeElement;
+    modalHistorico.classList.remove("hidden");
+    renderHistorico();
+    histData.focus();
+  }
+  if (btnHistorico) btnHistorico.addEventListener("click", abrirHistorico);
+  if (btnHistFechar) btnHistFechar.addEventListener("click", fecharHistorico);
+  if (modalHistorico) modalHistorico.addEventListener("click", function(e) {
+    if (e.target === modalHistorico) fecharHistorico();
+  });
+  if (modalHistorico) modalHistorico.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") fecharHistorico();
+    if (e.key === "Tab") {
+      var dialogo = modalHistorico.querySelector('[role="dialog"]');
+      var campos = Array.from(dialogo.querySelectorAll("button, input, select")).filter(function(el) {
+        return !el.disabled && el.offsetParent !== null;
+      });
+      var primeiro = campos[0];
+      var ultimo = campos[campos.length - 1];
+      if (e.shiftKey && document.activeElement === primeiro) {
+        e.preventDefault();
+        ultimo.focus();
+      } else if (!e.shiftKey && document.activeElement === ultimo) {
+        e.preventDefault();
+        primeiro.focus();
+      }
+    }
+  });
   if (histData) histData.addEventListener("change", renderHistorico);
   if (histTipoFiltro) histTipoFiltro.addEventListener("change", renderHistorico);
 
   if (btnExportarHist) {
     btnExportarHist.addEventListener("click", function() {
       if (logAtividades.length === 0) { toast("Nenhum histórico para exportar", "alerta"); return; }
-      var header = "Data/Hora,Ação,Nome,Detalhes,Turno,Andar\n";
-      var linhas = logAtividades.map(function(l) {
-        return l.dataHora + "," + l.acao + "," + l.nome + ',"' + (l.detalhes || "") + '",' + l.turno + "," + l.andar;
-      }).join("\n");
-      var blob = new Blob([header + linhas], { type: "text/csv;charset=utf-8;" });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement("a"); a.href = url;
-      a.download = "historico_" + new Date().toISOString().slice(0, 10) + ".csv";
-      a.click(); URL.revokeObjectURL(url);
+      baixarCsv(
+        "historico_" + new Date().toISOString().slice(0, 10) + ".csv",
+        ["Data/Hora", "Ação", "Nome", "Detalhes", "Turno", "Andar"],
+        logAtividades.map(function(l) { return [l.dataHora, l.acao, l.nome, l.detalhes, l.turno, l.andar]; })
+      );
       toast("Histórico exportado!", "sucesso");
     });
   }
 
   // === INIT ===
+  aplicarZoom();
   render();
   setTimeout(verificarAlertas, 2000);
+  if ("serviceWorker" in navigator && window.isSecureContext) {
+    navigator.serviceWorker.register(new URL("./sw.js", document.baseURI))
+      .catch(function(error) { console.error("Erro ao registrar o Service Worker:", error); });
+  }
 });

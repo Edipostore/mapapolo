@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rastreamento - Polo Shopping</title>
   <meta name="description" content="Sistema de rastreamento de itens e pessoas do Polo Shopping" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; img-src 'self' data:; font-src 'self' https://cdnjs.cloudflare.com;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://cdnjs.cloudflare.com; style-src-attr 'unsafe-inline'; img-src 'self' data:; font-src 'self' https://cdnjs.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#6366f1" />
+  <meta name="theme-color" content="#0a84ff" />
+  <link rel="icon" href="assets/img/app-icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/styles.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
@@ -16,20 +17,20 @@
     <div class="header-top">
       <h1><i class="fa-solid fa-satellite-dish"></i> Rastreamento Polo Shopping</h1>
       <div class="header-actions">
-        <select id="turno-select" title="Turno atual">
+        <select id="turno-select" title="Turno atual" aria-label="Turno atual">
           <option value="manha" selected>Manhã (06h-14h)</option>
           <option value="tarde">Tarde (14h-22h)</option>
           <option value="noite">Noite (22h-06h)</option>
         </select>
-        <button id="btn-historico" title="Histórico"><i class="fa-solid fa-clock-rotate-left"></i></button>
-        <button id="btn-theme" title="Alternar tema"><i class="fa-solid fa-moon"></i></button>
-        <button id="btn-exportar" title="Exportar CSV"><i class="fa-solid fa-file-export"></i></button>
+        <button id="btn-historico" title="Histórico" aria-label="Abrir histórico"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></button>
+        <button id="btn-theme" title="Alternar tema" aria-label="Alternar tema"><i class="fa-solid fa-moon" aria-hidden="true"></i></button>
+        <button id="btn-exportar" title="Exportar CSV" aria-label="Exportar registros em CSV"><i class="fa-solid fa-file-export" aria-hidden="true"></i></button>
       </div>
     </div>
     <p class="subtitle">Controle de itens e pessoas em tempo real</p>
   </header>
 
-  <section id="dashboard">
+  <section id="dashboard" aria-label="Resumo dos registros">
     <div class="card-counter">
       <i class="fa-solid fa-users"></i>
       <div>
@@ -109,27 +110,42 @@
       </fieldset>
     </section>
 
-    <section id="andares-tabs">
-      <button class="tab-andar active" data-andar="terreo">Térreo</button>
-      <button class="tab-andar" data-andar="piso1">1º Piso</button>
-      <button class="tab-andar" data-andar="piso2">2º Piso</button>
-      <button class="tab-andar" data-andar="externo">Externo</button>
+    <section id="andares-tabs" role="tablist" aria-label="Andares do mapa">
+      <button class="tab-andar active" role="tab" aria-selected="true" data-andar="terreo">Térreo</button>
+      <button class="tab-andar" role="tab" aria-selected="false" data-andar="piso1">1º Piso</button>
+      <button class="tab-andar" role="tab" aria-selected="false" data-andar="piso2">2º Piso</button>
+      <button class="tab-andar" role="tab" aria-selected="false" data-andar="externo">Externo</button>
     </section>
 
     <section id="mapa-e-lista">
-      <div id="map-container">
-        <div id="map-wrapper">
-          <img src="assets/img/shop (1).png" alt="Mapa do Polo Shopping" id="mapa" />
-          <div id="marcadores"></div>
-          <svg id="rastro-svg" class="rastro-layer"></svg>
-        </div>
-        <div id="zoom-controls">
-          <button id="zoom-in" title="Zoom +"><i class="fa-solid fa-plus"></i></button>
-          <button id="zoom-out" title="Zoom -"><i class="fa-solid fa-minus"></i></button>
-          <button id="zoom-reset" title="Reset"><i class="fa-solid fa-rotate-left"></i></button>
-        </div>
-        <div id="map-label">
-          <span id="andar-atual-label">Térreo</span>
+      <div id="map-stage">
+        <div id="map-container" role="region" aria-label="Mapa interativo. Toque ou clique para adicionar um registro.">
+          <div id="map-wrapper">
+            <img src="assets/img/shop (1).png" alt="Mapa do Polo Shopping" id="mapa" draggable="false" />
+            <div id="map-vegetation" aria-hidden="true">
+              <span class="map-tree" style="left: 12%; top: 26%;"></span>
+              <span class="map-tree" style="left: 17%; top: 30%;"></span>
+              <span class="map-tree" style="left: 22%; top: 24%;"></span>
+              <span class="map-tree" style="left: 27%; top: 29%;"></span>
+              <span class="map-tree" style="left: 15%; top: 34%;"></span>
+              <span class="map-tree" style="left: 8.5%; top: 46%;"></span>
+              <span class="map-tree" style="left: 95%; top: 53%;"></span>
+              <span class="map-tree" style="left: 96%; top: 60%;"></span>
+              <span class="map-tree" style="left: 48%; top: 78%;"></span>
+              <span class="map-tree" style="left: 52%; top: 80%;"></span>
+              <span class="map-tree" style="left: 54%; top: 76%;"></span>
+            </div>
+            <div id="marcadores" aria-label="Marcadores no mapa"></div>
+            <svg id="rastro-svg" class="rastro-layer" aria-hidden="true"></svg>
+          </div>
+          <div id="zoom-controls">
+            <button id="zoom-in" title="Aumentar zoom" aria-label="Aumentar zoom"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+            <button id="zoom-out" title="Diminuir zoom" aria-label="Diminuir zoom"><i class="fa-solid fa-minus" aria-hidden="true"></i></button>
+            <button id="zoom-reset" title="Redefinir zoom" aria-label="Redefinir zoom"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i></button>
+          </div>
+          <div id="map-label">
+            <span id="andar-atual-label">Térreo</span>
+          </div>
         </div>
       </div>
 
@@ -138,7 +154,7 @@
           <h2><i class="fa-solid fa-list-check"></i> Registros</h2>
           <div class="busca-container">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="busca-registro" placeholder="Buscar..." />
+            <input type="search" id="busca-registro" placeholder="Buscar..." aria-label="Buscar registros" />
           </div>
         </div>
         <ul id="lista-registros"></ul>
@@ -146,9 +162,9 @@
     </section>
   </main>
 
-  <div id="modal-edicao" class="modal hidden">
-    <div class="modal-content">
-      <h3><i class="fa-solid fa-pen"></i> Editar Registro</h3>
+  <div id="modal-edicao" class="modal hidden" role="presentation">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-edicao-titulo" tabindex="-1">
+      <h3 id="modal-edicao-titulo"><i class="fa-solid fa-pen" aria-hidden="true"></i> Editar Registro</h3>
       <label>Tipo:
         <select id="modal-tipo">
           <optgroup label="Pessoas">
@@ -184,15 +200,15 @@
     </div>
   </div>
 
-  <div id="modal-historico" class="modal hidden">
-    <div class="modal-content modal-wide">
+  <div id="modal-historico" class="modal hidden" role="presentation">
+    <div class="modal-content modal-wide" role="dialog" aria-modal="true" aria-labelledby="modal-historico-titulo" tabindex="-1">
       <div class="modal-hist-header">
-        <h3><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Atividades</h3>
-        <button id="btn-exportar-hist" title="Exportar histórico"><i class="fa-solid fa-download"></i></button>
+        <h3 id="modal-historico-titulo"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Histórico de Atividades</h3>
+        <button id="btn-exportar-hist" title="Exportar histórico" aria-label="Exportar histórico"><i class="fa-solid fa-download" aria-hidden="true"></i></button>
       </div>
       <div class="hist-filtros">
-        <input type="date" id="hist-data" />
-        <select id="hist-tipo-filtro">
+        <input type="date" id="hist-data" aria-label="Filtrar histórico por data" />
+        <select id="hist-tipo-filtro" aria-label="Filtrar histórico por tipo de atividade">
           <option value="">Todos os tipos</option>
           <option value="adicionado">Adicionados</option>
           <option value="editado">Editados</option>
@@ -207,7 +223,7 @@
     </div>
   </div>
 
-  <div id="toast-container"></div>
+  <div id="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
 
   <footer>
     <p>&copy; 2025 Polo Shopping - Sistema de Rastreamento v2.0</p>

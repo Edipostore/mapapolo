@@ -5,6 +5,7 @@ Sistema de rastreamento de itens e pessoas do Polo Shopping.
 ## Funcionalidades
 
 - Rastreamento visual em mapa interativo
+- Mapa original de alta resolução (7811 × 6051), com cores realçadas, inclinação 3D leve e árvores sobre áreas verdes
 - Múltiplos andares (Térreo, 1º Piso, 2º Piso, Externo)
 - Diferentes tipos de registros (pessoas, segurança, itens)
 - Status dos registros (ativo, inativo, alerta, em movimento)
@@ -12,13 +13,15 @@ Sistema de rastreamento de itens e pessoas do Polo Shopping.
 - Histórico de atividades
 - Exportação de dados em CSV
 - Modo escuro
-- Suporte PWA (Progressive Web App)
-- Zoom e movimentação do mapa
+- Interface responsiva para desktop e celular, com suporte a toque e teclado
+- Suporte PWA e uso offline após o primeiro carregamento
+- Zoom com renderização em tamanho ampliado e movimentação do mapa, preservando os detalhes do arquivo original
 - Persistência local com LocalStorage
+- Exportação CSV com escape de campos e proteção contra fórmulas
 
 ## Como Usar
 
-1. Abra o arquivo `index.html` em um servidor web
+1. Inicie um servidor web local ou publique em uma hospedagem com HTTPS
 2. Selecione o tipo de registro
 3. Preencha o nome (opcional)
 4. Escolha o status
@@ -29,6 +32,7 @@ Sistema de rastreamento de itens e pessoas do Polo Shopping.
 - Servidor web (Apache, Nginx, etc.) ou servidor de desenvolvimento
 - Navegador moderno com suporte a JavaScript ES6+
 - Conexão com internet (para carregar ícones Font Awesome)
+- HTTPS ou `localhost` para habilitar o Service Worker e a instalação como app
 
 ## Tecnologias
 
